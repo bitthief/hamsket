@@ -15,6 +15,7 @@ Ext.define('Hamsket.ux.WebView',{
 	// private
 	,zoomLevel: 0
 	,currentUnreadCount: 0
+	,isReady: false
 
 	// CONFIG
 	,hideMode: 'offsets'
@@ -226,21 +227,8 @@ Ext.define('Hamsket.ux.WebView',{
 			console.info('Start loading...', me.src);
 			if ( !me.down('statusbar').closed || !me.down('statusbar').keep ) me.down('statusbar').show();
 			me.down('statusbar').showBusy();
-			me.getWebContents().session.webRequest.onBeforeSendHeaders(
-				{
-					urls: [
-						'https://accounts.google.com/',
-						'https://accounts.google.com/*'
-					]
-				},
-				(details, callback) => {
-					details.requestHeaders['User-Agent'] =
-						'Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0';
-					callback({ requestHeaders: details.requestHeaders });
-				}
-			);
-
 		});
+
 		webview.addEventListener("did-stop-loading", function() {
 			me.down('statusbar').clearStatus({useDefaults: true});
 			if ( !me.down('statusbar').keep ) me.down('statusbar').hide();
@@ -293,6 +281,7 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 
 		webview.addEventListener("dom-ready", function(e) {
+			me.isReady = true;
 			// Mute Webview
 			if ( me.record.get('muted') || localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) ) me.setAudioMuted(true, true);
 
@@ -363,22 +352,26 @@ Ext.define('Hamsket.ux.WebView',{
 
 			// Scroll always to top (bug)
 			js_inject += '{document.body.scrollTop=0;}';
-
 			// Handles Certificate Errors
-			me.getWebContents().on('certificate-error', function(event, url, error, certificate, callback) {
-				if ( me.record.get('trust') ) {
-					event.preventDefault();
-					callback(true);
-				} else {
-					callback(false);
-				}
-
+			me.getWebContents().then(webContents => {
+				webContents.on('certificate-error', (event, url, error, certificate, callback) => {
+					if (me.record.get('trust')) {
+						event.preventDefault();
+						callback(true);
+					} else {
+						callback(false);
+					}
+					return webContents;
+				});
 				me.down('statusbar').keep = true;
 				me.down('statusbar').show();
 				me.down('statusbar').setStatus({
 					text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning'
 				});
 				me.down('statusbar').down('button').show();
+				return webContents;
+			}).catch(error => {
+				console.error(error);
 			});
 
 			webview.executeJavaScript(js_inject);
@@ -658,7 +651,10 @@ Ext.define('Hamsket.ux.WebView',{
 	}
 	,setZoomLevel(level)
 	{
-		this.getWebContents().zoomLevel = level;
+		this.getWebContents().then(webContents => {
+			webContents.zoomLevel = level;
+			return webContents;
+		}).catch(error => console.log(error));
 	}
 
 	,zoomIn() {
@@ -692,22 +688,26 @@ Ext.define('Hamsket.ux.WebView',{
 	}
 
 	,getWebView() {
-		if ( this.record.get('enabled') ) {
-			return this.down('component').el.dom;
-		} else {
-			return false;
-		}
+		return this.record.get('enabled') ? this.down('component').el.dom : false;
 	}
 	,getWebContents() {
-		if ( this.record.get('enabled') ) {
-			const remote = require('@electron/remote');
+		const promise = new Promise((resolve, reject) => {
 			const webview = this.getWebView();
-			const id = webview.getWebContentsId();
-			const webContents = remote.webContents.fromId(id);
-			return webContents;
-		} else {
-			return false;
-		}
+			const webContents = () => {
+				const remote = require('@electron/remote');
+				const id = webview.getWebContentsId();
+				const webContents = remote.webContents.fromId(id);
+				return webContents;
+			};
+			if (this.record.get('enabled') && this.isReady) {
+				resolve(webContents());
+			} else {
+				webview.addEventListener("dom-ready", () => {
+					resolve(webContents());
+				});
+			}
+		});
+		return promise;
 	}
 	,getUserAgent() {
 		const me = this;
@@ -739,8 +739,10 @@ Ext.define('Hamsket.ux.WebView',{
 	}
 	,updateUserAgent() {
 		const me = this;
-		const webcontents = me.getWebContents();
-		webcontents.setUserAgent(me.getUserAgent());
+		me.getWebContents().then(webContents => {
+			webContents.setUserAgent(me.getUserAgent());
+			return webContents;
+		}).catch(error => console.error(error));
 	}
 	,getOSArch(platform) {
 		const me = this;
