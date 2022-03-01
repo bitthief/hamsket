@@ -361,14 +361,14 @@ Ext.define('Hamsket.ux.WebView',{
 					} else {
 						callback(false);
 					}
-					return webContents;
+					me.down('statusbar').keep = true;
+					me.down('statusbar').show();
+					me.down('statusbar').setStatus({
+						text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning'
+					});
+					me.down('statusbar').down('button').show();
+
 				});
-				me.down('statusbar').keep = true;
-				me.down('statusbar').show();
-				me.down('statusbar').setStatus({
-					text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning'
-				});
-				me.down('statusbar').down('button').show();
 				return webContents;
 			}).catch(error => {
 				console.error(error);
