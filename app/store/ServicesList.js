@@ -52,7 +52,7 @@ Ext.define('Hamsket.store.ServicesList', {
 			,logo: 'messenger.png'
 			,name: 'Messenger'
 			,description: locale['services[3]']
-			,url: 'https://www.messenger.com/'
+			,url: ' https://www.facebook.com/messages/'
 			,type: 'messaging'
 			,titleBlink: true
 			,note: 'To enable desktop notifications, you have to go to Options inside Messenger.'
