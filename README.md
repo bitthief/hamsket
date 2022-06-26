@@ -158,6 +158,7 @@
 <img width="80" align="left" src="./resources/icons/hangoutschat.png" alt="Hangouts Chat" title="Hangouts Chat">
 <img width="80" align="left" src="./resources/icons/messengerpages.png" alt="Messenger for Business" title="Messenger for Business">
 <img width="80" align="left" src="./resources/icons/androidmessages.png" alt="Android Messages" title="Android Messages">
+<img width="80" align="left" src="./resources/icons/instagram.png" alt="Instagram" title="Instagram">
 
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 

@@ -874,6 +874,15 @@ Ext.define('Hamsket.store.ServicesList', {
 			,url: 'https://messages.google.com/web'
 			,type: 'messaging'
 			,js_unread: `let checkUnread=()=>{hamsket.updateBadge(Array.prototype.slice.apply(document.querySelectorAll(".text-content.unread")).reduce((c,b) => !b.querySelector(".notifications-off")+c,0))};setInterval(checkUnread,3e3);`
-		}
+		},
+		{
+			id: 'instagram'
+			,logo: 'instagram.png'
+			,name: 'Instagram'
+			,description: 'Instagram is a photo-sharing app for Android and iOS.'
+			,url: ' https://www.instagram.com'
+			,type: 'messaging'
+			,js_unread: `const checkUnread=()=>{const element=document.querySelector('a[href^="/direct/inbox"]');hamsket.updateBadge(hamsket.parseIntOrZero(element.textContent))};setInterval(checkUnread,3e3);`
+		},
 	]
 });
