@@ -207,9 +207,9 @@ Auth0 is disabled pending name change and rewrite of the functionality to best p
 
 Keep in mind, I'm not pushing this. I'll do my best regardless.
 
-| Type         |                    URL/Wallet                    |
-| ------------ | :----------------------------------------------: |
-| GoFundMe     |       <https://www.gofundme.com/Hamsket>       |
+| Type                |                    URL/Wallet                    |
+| --------------------| :----------------------------------------------: |
+| GitHub Sponsors     |       <https://github.com/sponsors/TheGoddessInari/>       |
 
 ----------
 
