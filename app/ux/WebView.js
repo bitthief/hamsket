@@ -35,9 +35,12 @@ Ext.define('Hamsket.ux.WebView',{
 			};
 		}
 
+		const shortcutKey = me.isMac(null) ? 'Cmd' : 'Ctrl';
+
 		Ext.apply(me, {
 			 items: me.webViewConstructor()
 			,title: me.record.get('tabname') ? Ext.String.htmlEncode(me.record.get('name')) : ''
+			,tooltip: Ext.String.htmlEncode(me.record.get('name'))+(me.record.get('position') < 10 ? ' ('+shortcutKey+'+'+me.record.get('position')+')' : '')
 			,icon: me.record.get('type') === 'custom' ? (me.record.get('logo') === '' ? 'resources/icons/custom.png' : me.record.get('logo')) : 'resources/icons/'+me.record.get('logo')
 			,src: me.record.get('url')
 			,type: me.record.get('type')
