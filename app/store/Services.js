@@ -27,7 +27,8 @@ Ext.define('Hamsket.store.Services', {
 			let servicesRight = [];
 			store.each(function(service) {
 				// If the service is disabled, we dont add it to tab bar
-				if ( !service.get('enabled') ) return;
+				if ( !service.get('enabled') )
+					return;
 
 				const cfg = {
 					 xtype: 'webview'
@@ -59,8 +60,10 @@ Ext.define('Hamsket.store.Services', {
 				}
 			});
 
-			if ( !Ext.isEmpty(servicesLeft) ) Ext.cq1('app-main').insert(1, servicesLeft);
-			if ( !Ext.isEmpty(servicesRight) ) Ext.cq1('app-main').add(servicesRight);
+			if ( !Ext.isEmpty(servicesLeft) )
+				Ext.cq1('app-main').insert(1, servicesLeft);
+			if ( !Ext.isEmpty(servicesRight) )
+				Ext.cq1('app-main').add(servicesRight);
 
 			// Set default active service
 			const config = ipc.sendSync('getConfig');
@@ -71,7 +74,8 @@ Ext.define('Hamsket.store.Services', {
 				case 'hamsketTab':
 					break;
 				default:
-					if ( Ext.getCmp('tab_'+config.default_service) ) Ext.cq1('app-main').setActiveTab('tab_'+config.default_service);
+					if ( Ext.getCmp('tab_'+config.default_service) )
+						Ext.cq1('app-main').setActiveTab('tab_'+config.default_service);
 					break;
 			}
 

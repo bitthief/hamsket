@@ -305,7 +305,7 @@ Ext.define('Hamsket.view.main.Main', {
 				,'->'
 				,{
 					 xtype: 'label'
-					,html: '<span class="fa fa-code-fork" style="color:black;"></span> '+locale['app.main[26]']+' <span class="fa fa-meh-o" style="color:red;"></span> '+locale['app.main[27]'].replace('USA', '<img src="resources/flag.png" alt="United States" data-qtip="United States" />')
+					,html: '<span class="fa fa-code-fork" style="color:black;"></span> ' + locale['app.main[26]'] + ' <span class="fa fa-meh-o" style="color:red;"></span> '+locale['app.main[27]'].replace('USA', '<img src="resources/flag.png" alt="United States" data-qtip="United States" />')
 				}
 				,'->'
 				,{

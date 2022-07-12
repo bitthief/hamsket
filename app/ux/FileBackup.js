@@ -26,16 +26,18 @@ Ext.define('Hamsket.ux.FileBackup', {
 		me.remote.dialog.showSaveDialog({
 			defaultPath: me.myDefaultPath
 		}).then((result) => {
-			if (!result.filePath) return;
+			if (!result.filePath)
+				return;
 			me.fs.writeFile(result.filePath, json_string, function(err) {
 				if (err) {
 					console.log(err);
 				}
 			});
 		}).catch((err) => {
-  		console.log(err);
+  			console.log(err);
 		});
-		if (Ext.isFunction(callback)) callback.bind(me)();
+		if (Ext.isFunction(callback))
+			callback.bind(me)();
 	},
 	restoreConfiguration() {
 		const me = this;
@@ -65,7 +67,7 @@ Ext.define('Hamsket.ux.FileBackup', {
 				});
 			}
 		}).catch((err) => {
-  		console.log(err);
+  			console.log(err);
 		});
 	}
 });

@@ -30,7 +30,8 @@ Ext.define('Hamsket.Application', {
 		Ext.util.Cookies.set('version', require('@electron/remote').app.getVersion());
 
 		// Check for updates
-		if ( require('@electron/remote').process.argv.indexOf('--without-update') === -1 ) Hamsket.app.checkUpdate(true);
+		if ( require('@electron/remote').process.argv.indexOf('--without-update') === -1 )
+			Hamsket.app.checkUpdate(true);
 
 		// Mouse Wheel zooming
 		document.addEventListener('mousewheel', function(e) {
@@ -38,18 +39,22 @@ Ext.define('Hamsket.Application', {
 				const  delta = Math.max(-1, Math.min(1, e.wheelDelta || -e.detail));
 
 				const tabPanel = Ext.cq1('app-main');
-				if ( tabPanel.items.indexOf(tabPanel.getActiveTab()) === 0 ) return false;
+				if ( tabPanel.items.indexOf(tabPanel.getActiveTab()) === 0 )
+					return false;
 
-				if ( delta === 1 ) { // Zoom In
+				if ( delta === 1 ) {
+					// Zoom In
 					tabPanel.getActiveTab().zoomIn();
-				} else { // Zoom Out
+				} else {
+					// Zoom Out
 					tabPanel.getActiveTab().zoomOut();
 				}
 			}
 		}, {passive:true});
 
 		// Define default value
-		if ( localStorage.getItem('dontDisturb') === null ) localStorage.setItem('dontDisturb', false);
+		if ( localStorage.getItem('dontDisturb') === null )
+			localStorage.setItem('dontDisturb', false);
 		ipc.send('setDontDisturb', localStorage.getItem('dontDisturb')); // We store it in config
 
 		if ( localStorage.getItem('locked') ) {
@@ -79,7 +84,7 @@ Ext.define('Hamsket.Application', {
 	}
 
 	,checkUpdate(silence) {
-		console.info('Checking for updates...');
+		console.info('Checking for updates..');
 		Ext.Ajax.request({
 			 url: 'https://api.github.com/repos/TheGoddessInari/hamsket/releases/latest'
 			,method: 'GET'
@@ -130,7 +135,7 @@ Ext.define('Hamsket.Application', {
 					});
 				}
 
-				console.info('Your version is the latest. No need to update.');
+				console.info('Your version is the latest, no need to update.');
 			}
 		});
 	}

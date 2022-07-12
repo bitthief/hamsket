@@ -1,11 +1,12 @@
+// Module to create tray icon
 const path = require('path');
 const {app, electron, nativeImage, Menu, MenuItem, Tray} = require('electron');
-// Module to create tray icon
 
 let appIcon = null;
 
 exports.create = function(win, config) {
-	if (process.platform === 'darwin' || appIcon || config.get('window_display_behavior') === 'show_taskbar' ) return;
+	if (process.platform === 'darwin' || appIcon || config.get('window_display_behavior') === 'show_taskbar' ) 
+		return;
 
 	const locale = require(path.join(app.getAppPath(), '/resources/languages/'+config.get('locale')));
 	const iconName = process.platform === 'linux' || process.platform === 'darwin' ? 'IconTray.png' : 'Icon.ico';
