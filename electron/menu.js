@@ -1,6 +1,7 @@
 'use strict';
+
 const os = require('os');
-const {app, BrowserWindow, Menu, shell}  = require('electron');
+const { app, BrowserWindow, Menu, shell }  = require('electron');
 const path = require('path');
 const appName = app.name;
 
@@ -15,7 +16,7 @@ function sendAction(action, ...args) {
 }
 
 module.exports = function(config) {
-	const locale = require(path.join(app.getAppPath(), '/resources/languages/'+config.get('locale')));
+	const locale = require(path.join(app.getAppPath(), '/resources/languages/' + config.get('locale')));
 	const helpSubmenu = [
 		{
 			label: `&Facebook`,
@@ -88,14 +89,7 @@ module.exports = function(config) {
 		},
 		{
 			type: 'separator'
-		},
-		/*{
-			label: `&`+locale['menu.help[3]'],
-			click() {
-				shell.openExternal('https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WU75QWS7LH2CA');
-			}
 		}
-		*/
 	];
 
 	let tpl = [
@@ -447,7 +441,7 @@ module.exports = function(config) {
 			type: 'separator'
 		});
 		helpSubmenu.push({
-			label: `&`+locale['menu.help[5]'],
+			label: `&` + locale['menu.help[5]'],
 			visible: process.argv.indexOf('--without-update') === -1,
 			click(item, win) {
 				const webContents = win.webContents;

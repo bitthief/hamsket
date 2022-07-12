@@ -2,9 +2,7 @@
 Ext.setGlyphFontFamily('FontAwesome');
 Ext.application({
 	 name: 'Hamsket'
-
 	,extend: 'Hamsket.Application'
-
 	,autoCreateViewport: 'Hamsket.view.main.Main'
 });
 
@@ -26,16 +24,16 @@ ipc.on('autoUpdater:check-update', function() {
 });
 ipc.on('autoUpdater:update-not-available', function() {
 	Ext.Msg.show({
-		 title: 'You are up to date!'
-		,message: 'You have the latest version of Hamsket.'
+		 title: 'You are up-to-date!'
+		,message: 'You are running the latest version of Hamsket.'
 		,icon: Ext.Msg.INFO
 		,buttons: Ext.Msg.OK
 	});
 });
 ipc.on('autoUpdater:update-available', function() {
 	Ext.Msg.show({
-		 title: 'New Version available!'
-		,message: 'Please wait until Hamsket download the new version and ask you for install it.'
+		 title: 'New version is available!'
+		,message: 'Please wait until Hamsket downloads the new version and asks you to install it.'
 		,icon: Ext.Msg.INFO
 		,buttons: Ext.Msg.OK
 	});
@@ -49,7 +47,7 @@ ipc.on('autoUpdater:update-downloaded', function(e, releaseNotes, releaseName, r
 			'->'
 			,{
 				 xtype: 'label'
-				,html: '<b>New version ready to install ('+releaseName+')!</b> It will be installed the next time Hamsket is relaunched.'
+				,html: '<b>New version is ready to install (' + releaseName + ')!</b> It will be installed the next time Hamsket is relaunched.'
 			}
 			,{
 				 xtype: 'button'
@@ -60,7 +58,7 @@ ipc.on('autoUpdater:update-downloaded', function(e, releaseNotes, releaseName, r
 				 xtype: 'button'
 				,text: 'Changelog'
 				,ui: 'decline'
-				,href: 'https://github.com/TheGoddessInari/hamsket/releases/tag/'+releaseName
+				,href: 'https://github.com/TheGoddessInari/hamsket/releases/tag/' + releaseName
 			}
 			,'->'
 			,{
@@ -122,6 +120,7 @@ ipc.on('setBadge', function(event, messageCount) {
 
 	ipc.send('setBadge', messageCount, canvas.toDataURL());
 });
+
 // Reload Current Service
 ipc.on('reloadCurrentService', function(e) {
 	const tab = Ext.cq1('app-main').getActiveTab();

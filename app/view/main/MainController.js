@@ -137,21 +137,22 @@ Ext.define('Hamsket.view.main.MainController', {
 
 		// Get Record
 		const rec = Ext.getStore('Services').getById(serviceId);
-		const {session: rsession} = require('@electron/remote');
+		const { session: rsession } = require('@electron/remote');
 
 		if ( !rec.get('enabled') ) {
 			const session = rsession.fromPartition(`persist:${rec.get('type')}_${serviceId}`);
 			clearData(session, null, resolve);
 		} else {
 			// Get Tab
-			// Clear all trash data
 			const tab = Ext.getCmp('tab_'+serviceId);
 			const session = rsession.fromPartition(tab.getWebView().partition);
+			// Clear all trash data
 			clearData(session, tab, resolve);
 		}
 
 		const config = ipc.sendSync('getConfig');
-		if ( config.default_service === rec.get('id') ) ipc.send('setConfig', Ext.apply(config, { default_service: 'hamsketTab' }));
+		if ( config.default_service === rec.get('id') )
+			ipc.send('setConfig', Ext.apply(config, { default_service: 'hamsketTab' }));
 
 		function clearData(session, tab, resolve) {
 			session.flushStorageData();
@@ -160,10 +161,7 @@ Ext.define('Hamsket.view.main.MainController', {
 			.then(session.cookies.flushStore)
 			.catch(err => {
 				console.error(`Error removing service data: ${rec.name} ${err}`);
-				Ext.Msg.alert(
-					'Error!',
-					`Error removing service data: ${rec.name}: ${err}`
-				);
+				Ext.Msg.alert('Error!', `Error removing service data: ${rec.name}: ${err}`);
 			})
 			.finally(function() {
 				const service_store = Ext.getStore('Services');
@@ -171,8 +169,10 @@ Ext.define('Hamsket.view.main.MainController', {
 				service_store.remove(rec);
 				service_store.sync();
 				// Close tab
-				if (tab) tab.close();
-				if ( Ext.isFunction(resolve) ) resolve();
+				if (tab)
+					tab.close();
+				if ( Ext.isFunction(resolve) )
+					resolve();
 				// Close waiting message
 				if ( total === actual ) {
 					Ext.Msg.close();
@@ -186,7 +186,7 @@ Ext.define('Hamsket.view.main.MainController', {
 
 		Ext.Msg.confirm(locale['app.window[12]'], locale['app.window[13]']+' <b>'+Ext.String.htmlEncode(rec.get('name'))+'</b>?', function(btnId) {
 			if ( btnId === 'yes' ) {
-				Ext.Msg.wait('Please wait until we clear all.', 'Removing...');
+				Ext.Msg.wait('Please wait until we clear all.', 'Removing..');
 				me.removeServiceFn(rec.get('id'), 1, 1);
 			}
 		});
@@ -203,7 +203,7 @@ Ext.define('Hamsket.view.main.MainController', {
 		if ( btn ) {
 			Ext.Msg.confirm(locale['app.window[12]'], locale['app.window[14]'], function(btnId) {
 				if ( btnId === 'yes' ) {
-					Ext.Msg.wait('Please wait until we clear all.', 'Removing...');
+					Ext.Msg.wait('Please wait until we clear all.', 'Removing..');
 					_removeAllServices(callback);
 				}
 			});
@@ -224,7 +224,8 @@ Ext.define('Hamsket.view.main.MainController', {
 				});
 				Promise.all(promises)
 				.then(function(resolve) {
-					if ( Ext.isFunction(callback) ) callback();
+					if ( Ext.isFunction(callback) )
+						callback();
 					return resolve;
 				})
 				.catch(function(err) {
@@ -280,8 +281,11 @@ Ext.define('Hamsket.view.main.MainController', {
 
 			Ext.getStore('ServicesList').getFilters().replaceAll({
 				fn(record) {
-					if ( record.get('type') === 'custom' ) return true;
-					if ( !Ext.Array.contains(Ext.Object.getKeys(cg.getValue()), record.get('type')) ) return false;
+					if ( record.get('type') === 'custom' )
+						return true;
+					if ( !Ext.Array.contains(Ext.Object.getKeys(cg.getValue()), record.get('type')) )
+						return false;
+
 					return Ext.String.htmlEncode(record.get('name')).toLowerCase().indexOf(newValue.toLowerCase()) > -1 ? true : false;
 				}
 			});
@@ -313,7 +317,8 @@ Ext.define('Hamsket.view.main.MainController', {
 			// Get Tab
 			const tab = Ext.getCmp('tab_'+serviceId);
 
-			if ( !tab ) return; // Skip disabled services
+			if ( !tab )
+				return; // Skip disabled services
 
 			// Mute sounds
 			tab.setAudioMuted(btn.pressed ? true : tab.record.get('muted'), true);
@@ -329,7 +334,8 @@ Ext.define('Hamsket.view.main.MainController', {
 		btn.setText(locale['app.main[16]']+': ' + ( btn.pressed ? locale['app.window[20]'] : locale['app.window[21]'] ));
 
 		// If this method is called from Lock method, prevent showing toast
-		if ( !e ) return;
+		if ( !e )
+			return;
 		Ext.toast({
 			 html: btn.pressed ? 'ENABLED' : 'DISABLED'
 			,title: 'Don\'t Disturb'

@@ -24,9 +24,9 @@ Ext.define('Hamsket.view.main.About', {
 	}
 	,tpl: [
 		 '<div style="text-align:center;"><img src="resources/Icon.png" width="100" /></div>'
-		,'<h3>'+locale['app.about[1]']+'</h3>'
-		,'<div><b>'+locale['app.about[2]']+':</b> {version}</div>'
-		,'<div><b>'+locale['app.about[3]']+':</b> {platform} ({arch})</div>'
+		,'<h3>' + locale['app.about[1]'] + '</h3>'
+		,'<div><b>' + locale['app.about[2]'] + ':</b> {version}</div>'
+		,'<div><b>' + locale['app.about[3]'] + ':</b> {platform} ({arch})</div>'
 		,'<div><b>Electron:</b> {electron}</div>'
 		,'<div><b>Chromium:</b> {chromium}</div>'
 		,'<div><b>Node:</b> {node}</div>'
@@ -34,7 +34,7 @@ Ext.define('Hamsket.view.main.About', {
 		,'<br />'
 		,'<div style="text-align:center;"><a href="https://github.com/TheGoddessInari/hamsket" target="_blank">GitHub</a></div>'
 		,'<br />'
-		,'<div style="text-align:center;"><i>'+locale['app.about[4]']+' TheGoddessInari.'
+		,'<div style="text-align:center;"><i>' + locale['app.about[4]'] + ' TheGoddessInari.'
 		,'<br />'
 		, 'Original version by Ramiro Saenz.</i></div>'
 	]

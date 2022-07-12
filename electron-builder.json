@@ -34,7 +34,7 @@
 			"Type": "Application",
 			"Categories": "Network;Email;Chat;InstantMessaging;"
 		},
-		"target": ["tar.gz", "deb", "rpm", "AppImage"]
+		"target": ["deb"]
 	},
 	"directories": {
 		"buildResources": "resources/installer/",
