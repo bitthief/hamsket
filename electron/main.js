@@ -187,29 +187,29 @@ function createWindow () {
 				break;
 		}
 	});*/
-
-    // Open links in default browser (Electron 12.0+)
-	mainWindow.webContents.setWindowOpenHandler(({ url, frameName, options, disposition }) => {
-		const protocol = require('url').parse(url).protocol;
-  		switch ( disposition ) {
-  			case 'new-window': {
-        		return {
-        			action: 'allow',
-        			overrideBrowserWindowOptions: {
-      					show: false,
-    				}
-        		 };
-        	}
-        	case 'foreground-tab': {
-				if ( ['http:', 'https:', 'mailto:', 'discord:', 'slack:', 'skype:', 'teams:', 'zoom:'].includes(protocol) ) {
-				    shell.openExternal(url);
-        			return { action: 'deny' };
-        		}
-        	}
-        	default:
-        		return { action: 'deny' };
-        }
+	mainWindow.webContents.setWindowOpenHandler((details) => {
+		const { URL } = require('url');
+		const url = new URL(details.url);
+		const protocol = url.protocol;
+		switch ( details.disposition ) {
+			case 'new-window': {
+				return {
+					action: 'allow',
+					overrideBrowserWindowOptions: {
+						show: true,
+					}
+				};
+			}
+			case 'foreground-tab': {
+				if (protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:' || protocol === 'zoom:' || protocol === 'slack:' || protocol === 'skype:' || protocol === 'teams:')
+					shell.openExternal(url.href);
+				return { action: 'deny' };
+			}
+			default:
+				return { action: 'deny' };
+		}
 	});
+
 	mainWindow.webContents.on('did-create-window', (childWindow, { url, frameName, options, disposition }) => {
   		const win = childWindow;
   		win.once('ready-to-show', () => win.show());
@@ -428,13 +428,13 @@ let allowPopUp = [
 	'identity.linuxfoundation.org/cas/login',
 	'auth.missiveapp.com',
 	'accounts.google.com/AccountChooser',
-	'facebook.com/v3.1/dialog/oauth?',
 	'accounts.google.com/o/oauth2',
 	'app.slack.com/files/import/gdrive',
 	'spikenow.com/s/account',
 	'app.mixmax.com/_oauth/google',
 	'officeapps.live.com',
 	'dropbox.com/profile_services/start_auth_flow',
+	'facebook.com/v3.1/dialog/oauth?',
 	'facebook.com/v3.2/dialog/oauth?',
 	'notion.so/googlepopupredirect',
 	'zoom.us/office365',
@@ -464,7 +464,7 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	});
 
 	// New Window handler
-	contents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures, referrer, postBody) => {
+	/*contents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures, referrer, postBody) => {
 		// If the url is 'about:blank', we allow the window and handle it in 'did-create-window'
 		if (['about:blank', 'about:blank#blocked'].includes(url)) {
 			event.preventDefault();
@@ -498,6 +498,35 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 			return;
 		shell.openExternal(url);
 		event.preventDefault();
+	});*/
+
+	contents.setWindowOpenHandler((details) => {
+		switch ( details.disposition ) {
+			case 'new-window': {
+				// If the url is 'about:blank', we allow the window and handle it in 'did-create-window'
+				if (['about:blank', 'about:blank#blocked'].includes(details.url)) {
+					return {
+						action: allow,
+						overrideBrowserWindowOptions: {
+							show: false,
+							center: true,
+						}
+					};
+				}
+
+				// We check if url is in the allowPopUpLoginURLs or allowForegroundTabURLs in Firebase to open as a popup,
+				// if it is not, we send this to the app
+				let allow = false;
+				allowPopUp.forEach(allowed => details.url.indexOf(allowed) > -1 && (allow = true));
+				if (allow)
+					return { action: 'allow' };
+				shell.openExternal(details.url);
+
+				return { action: 'deny' };
+			}
+			default:
+				return { action: 'deny' };
+		}
 	});
 
 	contents.on('did-create-window', (win, details) => {

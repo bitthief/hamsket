@@ -230,18 +230,6 @@ Ext.define('Hamsket.ux.WebView',{
 			if ( !me.down('statusbar').closed || !me.down('statusbar').keep )
 				me.down('statusbar').show();
 			me.down('statusbar').showBusy();
-
-			me.getWebContents().session.webRequest.onBeforeSendHeaders({
-					urls: [
-						'https://accounts.google.com/',
-						'https://accounts.google.com/*'
-					]
-				},
-				(details, callback) => {
-					details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0.2';
-					callback( { requestHeaders: details.requestHeaders } );
-				}
-			);
 		});
 
 		webview.addEventListener('did-stop-loading', function() {
@@ -326,7 +314,7 @@ Ext.define('Hamsket.ux.WebView',{
 		});
 
 		// Open links in default browser
-		webview.addEventListener('new-window', function(e) {
+		/*webview.addEventListener('new-window', function(e) {
 			e.preventDefault();
 			const protocol = require('url').parse(e.url).protocol;
 
@@ -337,7 +325,7 @@ Ext.define('Hamsket.ux.WebView',{
 			// Allow deep links
 			if ( !['http:',  'https:', 'about:'].includes(protocol) )
 				return require('electron').shell.openExternal(e.url);
-		});
+		});*/
 
 		webview.addEventListener('will-navigate', function(e, url) {
 			e.preventDefault();
@@ -363,6 +351,32 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 
 		webview.addEventListener('dom-ready', function(e) {
+			me.isReady = true;
+
+			// Open links in default browser
+			// Electron 22+
+			me.getWebContents().then(webContents => {
+				webContents.setWindowOpenHandler((details) => {
+					const { URL } = require('url');
+					const url = new URL(details.url);
+					const protocol = url.protocol;
+					switch ( details.disposition ) {
+						case 'new-window': {
+							// Allow deep links
+							if ( !['http:',  'https:', 'about:'].includes(protocol) )
+								require('@electron/remote').shell.openExternal(url.href);
+
+							return { action: 'deny' };
+						}
+						default:
+							return { action: 'deny' };
+					}
+				});
+				return webContents;
+			}).catch(error => {
+				console.error(error);
+			});
+
 			// Mute WebView
 			if ( me.record.get('muted') || localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) )
 				me.setAudioMuted(true, true);
@@ -435,20 +449,25 @@ Ext.define('Hamsket.ux.WebView',{
 			js_inject += 'document.body.scrollTop=0;';
 
 			// Handle Certificate Errors
-			me.getWebContents().on('certificate-error', function(event, url, error, certificate, callback) {
-				if ( me.record.get('trust') ) {
-					event.preventDefault();
-					callback(true);
-				} else {
-					callback(false);
-				}
+			me.getWebContents().then(webContents => {
+				webContents.on('certificate-error', function(event, url, error, certificate, callback) {
+					if ( me.record.get('trust') ) {
+						event.preventDefault();
+						callback(true);
+					} else {
+						callback(false);
+					}
 
-				me.down('statusbar').keep = true;
-				me.down('statusbar').show();
-				me.down('statusbar').setStatus({
-					text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certificate Warning'
+					me.down('statusbar').keep = true;
+					me.down('statusbar').show();
+					me.down('statusbar').setStatus({
+						text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certificate Warning'
+					});
+					me.down('statusbar').down('button').show();
 				});
-				me.down('statusbar').down('button').show();
+				return webContents;
+			}).catch(error => {
+				console.error(error);
 			});
 
 			webview.executeJavaScript(js_inject);
@@ -778,8 +797,12 @@ Ext.define('Hamsket.ux.WebView',{
 		if ( me.record.get('enabled') )
 			webview.goForward();
 	}
+
 	,setZoomLevel(level) {
-		this.getWebContents().zoomLevel = level;
+		this.getWebContents().then(webContents => {
+			webContents.zoomLevel = level;
+			return webContents;
+		}).catch(error => console.log(error));
 	}
 	,zoomIn() {
 		const me = this;
@@ -816,14 +839,23 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 	}
 	,getWebContents() {
-		if ( this.record.get('enabled') ) {
+		const promise = new Promise((resolve, reject) => {
 			const webview = this.getWebView();
-			const id = webview.getWebContentsId();
-			const remote = require('@electron/remote');
-			return remote.webContents.fromId(id);
-		} else {
-			return false;
-		}
+			const webContents = () => {
+				const remote = require('@electron/remote');
+				const id = webview.getWebContentsId();
+				const webContents = remote.webContents.fromId(id);
+				return webContents;
+			};
+			if (this.record.get('enabled') && this.isReady) {
+				resolve(webContents());
+			} else {
+				webview.addEventListener("dom-ready", () => {
+					resolve(webContents());
+				});
+			}
+		});
+		return promise;
 	}
 	,getUserAgent() {
 		const me = this;
@@ -963,7 +995,7 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 	}
 	,getChromeVersion(version) {
-		return version || require('@electron/remote').require('process').versions['chrome'];
+		return version || require('@electron/remote').process.versions['chrome'];
 	}
 	,getElectronVersion() {
 		return require('@electron/remote').process.versions['electron'];
