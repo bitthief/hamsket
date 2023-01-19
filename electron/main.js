@@ -441,6 +441,7 @@ let allowPopUp = [
 	'figma.com/start_google_sso',
 	'mail.google.com/mail',
 	'account.protonmail.com/authorize?',
+	'account.protonmail.me/authorize?',
 	'app.slack.com/free-willy/',
 	'messenger.com/videocall',
 	'api.moo.do',
