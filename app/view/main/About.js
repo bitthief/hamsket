@@ -7,10 +7,11 @@ Ext.define('Hamsket.view.main.About', {
 	,resizable: false
 	,constrain: true
 	,width: 300
-	,height: 450
+	,height: 470
 	,bodyPadding: 10
-	,initComponent() {
+	,initComponent: function() {
 		const me = this;
+
 		me.callParent(arguments);
 		me.data.buildversion = require('fs').readFileSync( __dirname + '/BUILDVERSION', 'utf8');
 	}
@@ -36,6 +37,6 @@ Ext.define('Hamsket.view.main.About', {
 		,'<br />'
 		,'<div style="text-align:center;"><i>' + locale['app.about[4]'] + ' TheGoddessInari.'
 		,'<br />'
-		, 'Original version by Ramiro Saenz.</i></div>'
+		,'Original version by Ramiro Saenz.</i></div>'
 	]
 });

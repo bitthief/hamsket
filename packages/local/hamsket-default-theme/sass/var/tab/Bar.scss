@@ -1,2 +1,2 @@
-$tabbar-strip-background-color: $base-color;
-$tabbar-strip-height: 3px;
+$tabbar-strip-background-color: dynamic($base-color);
+$tabbar-strip-height: dynamic(3px);

@@ -1,8 +1,9 @@
 'use strict';
 
-const os = require('os');
 const { app, BrowserWindow, Menu, shell }  = require('electron');
+const os = require('os');
 const path = require('path');
+
 const appName = app.name;
 
 function sendAction(action, ...args) {
@@ -70,9 +71,7 @@ module.exports = function(config) {
 				{
 					label: `&Clear Cache`,
 					click(item, win) {
-						win.webContents.session.clearCache(function() {
-							win.reload();
-						});
+						win.webContents.session.clearCache().then(() => win.reload());
 					}
 				},
 				{
@@ -80,9 +79,7 @@ module.exports = function(config) {
 					click(item, win) {
 						win.webContents.session.clearStorageData({
 							storages: ['localstorage']
-						}, function() {
-							win.reload();
-						});
+						}).then(() => win.reload());
 					}
 				}
 			]
@@ -138,7 +135,8 @@ module.exports = function(config) {
 					label: '&'+locale['menu.view[1]'],
 					accelerator: 'CmdOrCtrl+R',
 					click(item, focusedWindow) {
-						if (focusedWindow) focusedWindow.reload();
+						if (focusedWindow)
+							focusedWindow.reload();
 					}
 				},
 				{
@@ -342,7 +340,8 @@ module.exports = function(config) {
 					label: '&'+locale['menu.view[3]'],
 					accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
 					click(item, focusedWindow) {
-						if (focusedWindow) focusedWindow.webContents.toggleDevTools();
+						if (focusedWindow)
+							focusedWindow.webContents.toggleDevTools();
 					}
 				}
 			]

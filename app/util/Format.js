@@ -3,12 +3,10 @@
  */
 Ext.define('Hamsket.util.Format', {
 	 singleton: true
-
-	,formatNumber(n) {
+	,formatNumber: function(n) {
 		return n.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 	}
-
-	,stripNumber(n) {
+	,stripNumber: function(n) {
 		return (typeof n == "number") ? n : n.match(/\d+/g) ? parseInt(n.match(/\d+/g).join("")) : 0;
 	}
 });

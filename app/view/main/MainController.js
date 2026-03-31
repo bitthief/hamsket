@@ -1,36 +1,33 @@
-const darkreader = require('darkreader');
-
 Ext.define('Hamsket.view.main.MainController', {
 	 extend: 'Ext.app.ViewController'
-
 	,alias: 'controller.main'
-
-	,initialize( tabPanel ) {
+	,initialize: function( tabPanel ) {
 		const config = ipc.sendSync('getConfig');
-
-		if (config.darkreader) {
-			darkreader.enable();
-		} else {
-			darkreader.disable();
-		}
 
 		tabPanel.setTabPosition(config.tabbar_location);
 		tabPanel.setTabRotation(0);
 
-		let reorderer = tabPanel.plugins.find(function(plugin) {
-			return plugin.ptype === "tabreorderer";
-		});
-
+		let reorderer = tabPanel.plugins.find((plugin) => { return plugin.ptype === "tabreorderer"; });
 		if ( reorderer !== undefined ) {
 			const names = reorderer.container.getLayout().names;
 			reorderer.dd.dim = names.width;
 			reorderer.dd.startAttr = names.beforeX;
 			reorderer.dd.endAttr = names.afterX;
+		} else {
+			console.error('Unable to find tabreorderer plugin!');
 		}
 	}
-
+	// Load Services store
+	,onBeforeRender: function() {
+		const store = Ext.getStore('Services');
+		if (!(store.isLoaded() || store.isLoading())) {
+			store.suspendEvent('beforerender');
+			store.load();
+			store.resumeEvent('beforerender');
+		}
+	}
 	// Make focus on webview every time the user change tabs, to enable the autofocus in websites
-	,onTabChange( tabPanel, newTab, oldTab ) {
+	,onTabChange: function( tabPanel, newTab, oldTab ) {
 		const me = this;
 
 		localStorage.setItem('last_active_service', newTab.id);
@@ -57,19 +54,19 @@ Ext.define('Hamsket.view.main.MainController', {
 			document.title = `Hamsket - ${Ext.String.htmlEncode(newTab.record.get('name'))}`;
 		}
 	}
-
-	,updatePositions(tabPanel, tab) {
-		if ( tab.id === 'hamsketTab' || tab.id === 'tbfill' ) return true;
-
-		console.log('Updating Tabs positions...');
+	,updatePositions: function(tabPanel, tab) {
+		if ( tab.id === 'hamsketTab' || tab.id === 'tbfill' )
+			return true;
 
 		const store = Ext.getStore('Services');
-		let align = 'left';
 		store.suspendEvent('childmove');
-		Ext.each(tabPanel.items.items, function(t, i) {
+
+		let align = 'left';
+		Ext.each(tabPanel.items.items, (t, i) => {
 			if ( t.id !== 'hamsketTab' && t.id !== 'tbfill' && t.record.get('enabled') ) {
 				const rec = store.getById(t.record.get('id'));
-				if ( align === 'right' ) i--;
+				if ( align === 'right' )
+					i--;
 				if (rec) {
 					rec.set('align', align);
 					rec.set('position', i);
@@ -79,20 +76,18 @@ Ext.define('Hamsket.view.main.MainController', {
 			else if ( t.id === 'tbfill' ) {
 				align = 'right';
 			}
-
 		});
 
 		store.load();
 		store.resumeEvent('childmove');
 	}
-
-	,showServiceTab( grid, record, tr, rowIndex, e ) {
-		if ( e.position.colIdx === 0 ) { // Service Logo
+	,showServiceTab: function( grid, record, tr, rowIndex, e ) {
+		if ( e.position.colIdx === 0 ) {
+			// Service Logo
 			Ext.getCmp('tab_'+record.get('id')).show();
 		}
 	}
-
-	,onRenameService(editor, e) {
+	,onRenameService: function(editor, e) {
 		const me = this;
 
 		e.record.commit();
@@ -100,53 +95,56 @@ Ext.define('Hamsket.view.main.MainController', {
 		// Change the title of the Tab
 		Ext.getCmp('tab_'+e.record.get('id')).setTitle(Ext.String.htmlEncode(e.record.get('name')));
 	}
-
-	,onEnableDisableService(cc, rowIndex, checked, obj, hideTab) {
+	,onEnableDisableService: function(cc, rowIndex, checked, obj, hideTab) {
 		const rec = Ext.getStore('Services').getAt(rowIndex);
 
 		if ( !checked ) {
 			Ext.getCmp('tab_'+rec.get('id')).destroy();
-		} else {
-			Ext.cq1('app-main').insert(rec.get('align') === 'left' ? rec.get('position') : rec.get('position')+1, {
-				 xtype: 'webview'
-				,id: 'tab_'+rec.get('id')
-				,title: `${Ext.String.htmlEncode(rec.get('name'))}`
-				,icon: rec.get('type') !== 'custom' ? 'resources/icons/'+rec.get('logo') : ( rec.get('logo') === '' ? 'resources/icons/custom.png' : rec.get('logo'))
-				,src: rec.get('url')
-				,type: rec.get('type')
-				,muted: rec.get('muted')
-				,includeInGlobalUnreadCounter: rec.get('includeInGlobalUnreadCounter')
-				,displayTabUnreadCounter: rec.get('displayTabUnreadCounter')
-				,custom_css_complex: rec.get('custom_css_complex')
-				,passive_event_listeners: rec.get('passive_event_listeners')
-				,slowed_timers: rec.get('slowed_timers')
-				,userAgent: rec.get('userAgent')
-				,os_override: rec.get('os_override')
-				,chrome_version: rec.get('chrome_version')
-				,enabled: rec.get('enabled')
-				,record: rec
-				,hidden: hideTab
-				,tabConfig: {
-					 service: rec
-				}
-			});
+		}
+		else {
+			if (Ext.cq1('app-main') != undefined) {
+				Ext.cq1('app-main').insert(rec.get('align') === 'left' ? rec.get('position') : rec.get('position')+1, {
+					xtype: 'webview'
+					,id: 'tab_'+rec.get('id')
+					,title: `${Ext.String.htmlEncode(rec.get('name'))}`
+					,icon: rec.get('type') !== 'custom' ? 'resources/icons/'+rec.get('logo') : ( rec.get('logo') === '' ? 'resources/icons/custom.png' : rec.get('logo'))
+					,src: rec.get('url')
+					,type: rec.get('type')
+					,muted: rec.get('muted')
+					,includeInGlobalUnreadCounter: rec.get('includeInGlobalUnreadCounter')
+					,displayTabUnreadCounter: rec.get('displayTabUnreadCounter')
+					,custom_css_complex: rec.get('custom_css_complex')
+					,passive_event_listeners: rec.get('passive_event_listeners')
+					,slowed_timers: rec.get('slowed_timers')
+					,userAgent: rec.get('userAgent')
+					,os_override: rec.get('os_override')
+					,chrome_version: rec.get('chrome_version')
+					,enabled: rec.get('enabled')
+					,record: rec
+					,hidden: hideTab
+					,tabConfig: {
+						service: rec
+					}
+				});
+			}
+			else {
+				console.error('Unable to enable service, app-main is undefined!');
+			}
 		}
 	}
-
-	,onNewServiceSelect( view, record, item, index, e ) {
-		Ext.create('Hamsket.view.add.Add', {
-			record: record
-		});
+	,onNewServiceSelect: function( view, record, item, index, e ) {
+		Ext.create('Hamsket.view.add.Add', { record: record });
 	}
-
-	,removeServiceFn(serviceId, total, actual, resolve) {
+	,removeServiceFn: function(serviceId, total, actual, resolve) {
 		const me = this;
-		if ( !serviceId ) return false;
+
+		if ( !serviceId )
+			return false;
+
+		const { session: rsession } = require('@electron/remote');
 
 		// Get Record
 		const rec = Ext.getStore('Services').getById(serviceId);
-		const { session: rsession } = require('@electron/remote');
-
 		if ( !rec.get('enabled') ) {
 			const session = rsession.fromPartition(`persist:${rec.get('type')}_${serviceId}`);
 			clearData(session, null, resolve);
@@ -164,14 +162,10 @@ Ext.define('Hamsket.view.main.MainController', {
 
 		function clearData(session, tab, resolve) {
 			session.flushStorageData();
-			session.clearCache()
-			.then(session.clearStorageData)
-			.then(session.cookies.flushStore)
-			.catch(err => {
+			session.clearCache().then(session.clearStorageData).then(session.cookies.flushStore).catch((err) => {
 				console.error(`Error removing service data: ${rec.name} ${err}`);
 				Ext.Msg.alert('Error!', `Error removing service data: ${rec.name}: ${err}`);
-			})
-			.finally(function() {
+			}).finally(() => {
 				const service_store = Ext.getStore('Services');
 				// Remove record from localStorage
 				service_store.remove(rec);
@@ -188,19 +182,17 @@ Ext.define('Hamsket.view.main.MainController', {
 			});
 		}
 	}
-
-	,removeService( gridView, rowIndex, colIndex, col, e, rec, rowEl ) {
+	,removeService: function( gridView, rowIndex, colIndex, col, e, rec, rowEl ) {
 		const me = this;
 
-		Ext.Msg.confirm(locale['app.window[12]'], locale['app.window[13]']+' <b>'+Ext.String.htmlEncode(rec.get('name'))+'</b>?', function(btnId) {
+		Ext.Msg.confirm(locale['app.window[12]'], locale['app.window[13]']+' <b>'+Ext.String.htmlEncode(rec.get('name'))+'</b>?', (btnId) => {
 			if ( btnId === 'yes' ) {
 				Ext.Msg.wait('Please wait until we clear all.', 'Removing..');
 				me.removeServiceFn(rec.get('id'), 1, 1);
 			}
 		});
 	}
-
-	,removeAllServices(btn, callback) {
+	,removeAllServices: function(btn, callback) {
 		const me = this;
 
 		// Clear counter for unread messaging
@@ -209,7 +201,7 @@ Ext.define('Hamsket.view.main.MainController', {
 		const store = Ext.getStore('Services');
 
 		if ( btn ) {
-			Ext.Msg.confirm(locale['app.window[12]'], locale['app.window[14]'], function(btnId) {
+			Ext.Msg.confirm(locale['app.window[12]'], locale['app.window[14]'], (btnId) => {
 				if ( btnId === 'yes' ) {
 					Ext.Msg.wait('Please wait until we clear all.', 'Removing..');
 					_removeAllServices(callback);
@@ -218,29 +210,24 @@ Ext.define('Hamsket.view.main.MainController', {
 		} else {
 			_removeAllServices(callback);
 		}
+
 		function _removeAllServices (callback) {
-			store.load(function(records, operation, success) {
+			store.load((records, operation, success) => {
 				store.suspendEvent('remove');
 				store.suspendEvent('childmove');
 				const count = store.getCount();
 				let i = 1;
 				let promises = [];
-				Ext.Array.each(store.collect('id'), function(serviceId) {
-					promises.push(new Promise(function(resolve) {
-						 me.removeServiceFn(serviceId, count, i++, resolve);
-					}));
-				});
+				Ext.Array.each(store.collect('id'), (serviceId) => { promises.push(new Promise((resolve) => { me.removeServiceFn(serviceId, count, i++, resolve); })); });
 				Promise.all(promises)
-				.then(function(resolve) {
+				.then(resolve => {
 					if ( Ext.isFunction(callback) )
 						callback();
 					return resolve;
-				})
-				.catch(function(err) {
+				}).catch((err) => {
 					console.error('Error removing services: ' + err);
 					Ext.Msg.alert('Error!','Error removing services: ' + err);
-				})
-				.finally(function() {
+				}).finally(() => {
 					store.resumeEvent('childmove');
 					store.resumeEvent('remove');
 					document.title = 'Hamsket';
@@ -248,29 +235,22 @@ Ext.define('Hamsket.view.main.MainController', {
 			});
 		}
 	}
-
-	,configureService( gridView, rowIndex, colIndex, col, e, rec, rowEl ) {
-		Ext.create('Hamsket.view.add.Add', {
-			 record: rec
-			,service: Ext.getStore('ServicesList').getById(rec.get('type'))
-			,edit: true
-		});
+	,configureService: function( gridView, rowIndex, colIndex, col, e, rec, rowEl ) {
+		Ext.create('Hamsket.view.add.Add', { record: rec, service: Ext.getStore('ServicesList').getById(rec.get('type')), edit: true });
 	}
-
-	,onSearchRender( field ) {
+	,onSearchRender: function( field ) {
 		field.focus(false, 1000);
 	}
-
-	,onSearchEnter( field, e ) {
+	,onSearchEnter: function( field, e ) {
 		const me = this;
 
-		if ( e.getKey() === e.ENTER && Ext.getStore('ServicesList').getCount() === 2 ) { // Two because we always shows Custom Service option
+		// Two because we always shows Custom Service option
+		if ( e.getKey() === e.ENTER && Ext.getStore('ServicesList').getCount() === 2 ) {
 			me.onNewServiceSelect(field.up().down('dataview'), Ext.getStore('ServicesList').getAt(0));
 			me.onClearClick(field);
 		}
 	}
-
-	,doTypeFilter( cg, newValue, oldValue ) {
+	,doTypeFilter: function( cg, newValue, oldValue ) {
 		const me = this;
 
 		Ext.getStore('ServicesList').getFilters().replaceAll({
@@ -279,8 +259,7 @@ Ext.define('Hamsket.view.main.MainController', {
 			}
 		});
 	}
-
-	,onSearchServiceChange(field, newValue, oldValue) {
+	,onSearchServiceChange: function(field, newValue, oldValue) {
 		const me = this;
 
 		const cg = field.up().down('checkboxgroup');
@@ -304,8 +283,7 @@ Ext.define('Hamsket.view.main.MainController', {
 		}
 		field.updateLayout();
 	}
-
-	,onClearClick(field, trigger, e) {
+	,onClearClick: function(field, trigger, e) {
 		const me = this;
 
 		const cg = field.up().down('checkboxgroup');
@@ -317,11 +295,10 @@ Ext.define('Hamsket.view.main.MainController', {
 		Ext.getStore('ServicesList').getFilters().removeAll();
 		me.doTypeFilter(cg);
 	}
-
-	,dontDisturb(btn, e, called) {
+	,dontDisturb: function(btn, e, called) {
 		console.info('Dont Disturb:', btn.pressed ? 'Enabled' : 'Disabled');
 
-		Ext.Array.each(Ext.getStore('Services').collect('id'), function(serviceId) {
+		Ext.Array.each(Ext.getStore('Services').collect('id'), (serviceId) => {
 			// Get Tab
 			const tab = Ext.getCmp('tab_'+serviceId);
 
@@ -344,20 +321,13 @@ Ext.define('Hamsket.view.main.MainController', {
 		// If this method is called from Lock method, prevent showing toast
 		if ( !e )
 			return;
-		Ext.toast({
-			 html: btn.pressed ? 'ENABLED' : 'DISABLED'
-			,title: 'Don\'t Disturb'
-			,width: 200
-			,align: 't'
-			,closable: false
-		});
+		Ext.toast({ html: btn.pressed ? 'ENABLED' : 'DISABLED' ,title: 'Don\'t Disturb' ,width: 200 ,align: 't' ,closable: false });
 	}
-
-	,lockHamsket(btn) {
+	,lockHamsket: function(btn) {
 		const me = this;
 
 		if ( ipc.sendSync('getConfig').master_password ) {
-			Ext.Msg.confirm(locale['app.main[19]'], 'Do you want to use the Master Password as your temporal password?', function(btnId) {
+			Ext.Msg.confirm(locale['app.main[19]'], 'Do you want to use the Master Password as your temporal password?', (btnId) => {
 				if ( btnId === 'yes' ) {
 					setLock(ipc.sendSync('getConfig').master_password);
 				} else {
@@ -367,24 +337,17 @@ Ext.define('Hamsket.view.main.MainController', {
 		} else {
 			showTempPass();
 		}
-
 		function showTempPass() {
-			const msgbox = Ext.Msg.prompt(locale['app.main[19]'], locale['app.window[22]'], function(btnId, text) {
+			const msgbox = Ext.Msg.prompt(locale['app.main[19]'], locale['app.window[22]'], (btnId, text) => {
 				if ( btnId === 'ok' ) {
-					const msgbox2 = Ext.Msg.prompt(locale['app.main[19]'], locale['app.window[23]'], function(btnId, text2) {
+					const msgbox2 = Ext.Msg.prompt(locale['app.main[19]'], locale['app.window[23]'], (btnId, text2) => {
 						if ( btnId === 'ok' ) {
 							if ( text !== text2 ) {
-								Ext.Msg.show({
-									 title: locale['app.window[24]']
-									,message: locale['app.window[25]']
-									,icon: Ext.Msg.WARNING
-									,buttons: Ext.Msg.OK
-									,fn: me.lockHamsket
-								});
+								Ext.Msg.show({ title: locale['app.window[24]'], message: locale['app.window[25]'], icon: Ext.Msg.WARNING, buttons: Ext.Msg.OK, fn: me.lockHamsket });
 								return false;
 							}
 
-							setLock(Hamsket.util.MD5.encypt(text));
+							setLock(Hamsket.util.MD5.encrypt(text));
 						}
 					});
 					msgbox2.textField.inputEl.dom.type = 'password';
@@ -405,12 +368,11 @@ Ext.define('Hamsket.view.main.MainController', {
 			me.showLockWindow();
 		}
 	}
-
-	,showLockWindow() {
+	,showLockWindow: function() {
 		const me = this;
 
 		const validateFn = function() {
-			if ( localStorage.getItem('locked') === Hamsket.util.MD5.encypt(winLock.down('textfield').getValue()) ) {
+			if ( localStorage.getItem('locked') === Hamsket.util.MD5.encrypt(winLock.down('textfield').getValue()) ) {
 				console.info('Lock Hamsket:', 'Disabled');
 				localStorage.removeItem('locked');
 				winLock.close();
@@ -456,7 +418,7 @@ Ext.define('Hamsket.view.main.MainController', {
 							,inputType: 'password'
 							,width: 256
 							,listeners: {
-								specialkey(field, e){
+								specialkey: function(field, e) {
 									if ( e.getKey() === e.ENTER ) {
 										validateFn();
 									}
@@ -466,7 +428,7 @@ Ext.define('Hamsket.view.main.MainController', {
 						,{
 							 xtype: 'button'
 							,text: locale['app.window[27]']
-							,glyph: 'XF13E@FontAwesome'
+							,glyph: 0xF13E
 							,width: 256
 							,scale: 'large'
 							,handler: validateFn
@@ -475,20 +437,16 @@ Ext.define('Hamsket.view.main.MainController', {
 				}
 			]
 			,listeners: {
-				render(win) {
-					win.getEl().on('click', function() {
-						win.down('textfield').focus(100);
-					});
+				render: function(win) {
+					win.getEl().on('click', () => { win.down('textfield').focus(100); });
 				}
 			}
 		}).show();
 		winLock.down('textfield').focus(1000);
 	}
-
-	,openPreferences( btn ) {
+	,openPreferences: function( btn ) {
 		const me = this;
 
 		Ext.create('Hamsket.view.preferences.Preferences').show();
-	}
-
+	},
 });

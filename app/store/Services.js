@@ -1,16 +1,13 @@
 Ext.define('Hamsket.store.Services', {
 	 extend: 'Ext.data.Store'
 	,alias: 'store.services'
-
 	,requires: [
 		'Ext.data.proxy.LocalStorage'
 	]
-
 	,model: 'Hamsket.model.Service'
-
-	,autoLoad: true
+	,storeId: 'Services'
+	,autoLoad: false
 	,autoSync: true
-
 	,groupField: 'align'
 	,sorters: [
 		{
@@ -18,20 +15,23 @@ Ext.define('Hamsket.store.Services', {
 			,direction: 'ASC'
 		}
 	]
-
 	,listeners: {
-		load( store, records, successful ) {
-			Ext.cq1('app-main').suspendEvent('add');
+		load: function( store, records, successful ) {
+			if (Ext.cq1('app-main') != undefined) {
+				Ext.cq1('app-main').suspendEvent('add');
+			} else {
+				console.error('Unable to suspend add event, app-main is undefined!');
+			}
 
 			let servicesLeft = [];
 			let servicesRight = [];
 			store.each(function(service) {
-				// If the service is disabled, we dont add it to tab bar
+				// If the service is disabled, we don't add it to tab bar
 				if ( !service.get('enabled') )
 					return;
 
 				const cfg = {
-					 xtype: 'webview'
+					xtype: 'webview'
 					,id: 'tab_'+service.get('id')
 					,title: Ext.String.htmlEncode(service.get('name'))
 					,icon: service.get('type') !== 'custom' ? 'resources/icons/'+service.get('logo') : ( service.get('logo') === '' ? 'resources/icons/custom.png' : service.get('logo'))
@@ -48,9 +48,7 @@ Ext.define('Hamsket.store.Services', {
 					,chrome_version: service.get('chrome_version')
 					,enabled: service.get('enabled')
 					,record: service
-					,tabConfig: {
-						service: service
-					}
+					,tabConfig: { service: service }
 				};
 
 				if (service.get('align') === 'left') {
@@ -60,27 +58,46 @@ Ext.define('Hamsket.store.Services', {
 				}
 			});
 
-			if ( !Ext.isEmpty(servicesLeft) )
-				Ext.cq1('app-main').insert(1, servicesLeft);
-			if ( !Ext.isEmpty(servicesRight) )
-				Ext.cq1('app-main').add(servicesRight);
+			if (Ext.cq1('app-main') != undefined) {
+				if ( !Ext.isEmpty(servicesLeft) )
+					Ext.cq1('app-main').insert(1, servicesLeft);
+				if ( !Ext.isEmpty(servicesRight) )
+					Ext.cq1('app-main').add(servicesRight);
+			}
+			else {
+				console.error('Unable to insert/add service, app-main is undefined!');
+			}
 
 			// Set default active service
 			const config = ipc.sendSync('getConfig');
 			switch ( config.default_service ) {
 				case 'last':
-					Ext.cq1('app-main').setActiveTab(localStorage.getItem('last_active_service'));
+					if (Ext.cq1('app-main') != undefined) {
+						Ext.cq1('app-main').setActiveTab(localStorage.getItem('last_active_service'));
+					} else {
+						console.error('Unable to set active service tab default, app-main is undefined!');
+					}
 					break;
 				case 'hamsketTab':
 					break;
 				default:
-					if ( Ext.getCmp('tab_'+config.default_service) )
-						Ext.cq1('app-main').setActiveTab('tab_'+config.default_service);
+					if ( Ext.getCmp('tab_' + config.default_service) ) {
+						if (Ext.cq1('app-main') != undefined) {
+							Ext.cq1('app-main').setActiveTab('tab_'+config.default_service);
+						} else {
+							console.error('Unable to set active service tab, app-main is undefined!');
+						}
+					}
 					break;
 			}
 
 			store.suspendEvent('load');
-			Ext.cq1('app-main').resumeEvent('add');
+
+			if (Ext.cq1('app-main') != undefined) {
+				Ext.cq1('app-main').resumeEvent('add');
+			} else {
+				console.error('Unable to resume add event, app-main is undefined!');
+			}
 		}
 	}
 });

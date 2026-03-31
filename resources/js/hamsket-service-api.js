@@ -19,10 +19,7 @@ window.hamsket.locale = ipcRenderer.sendSync('getConfig').locale;
  * @param {*} count	The unread count
  */
 window.hamsket.setUnreadCount = function(count) {
-	ipcRenderer.sendToHost(
-		'hamsket.setUnreadCount',
-		window.hamsket.parseIntOrZero(count)
-	);
+	ipcRenderer.sendToHost('hamsket.setUnreadCount', window.hamsket.parseIntOrZero(count));
 };
 
 /**
@@ -31,11 +28,7 @@ window.hamsket.setUnreadCount = function(count) {
  * @param {*} indirect
  */
 window.hamsket.updateBadge = function(direct, indirect = 0) {
-	ipcRenderer.sendToHost(
-		'hamsket.updateBadge',
-		window.hamsket.parseIntOrZero(direct),
-		window.hamsket.parseIntOrZero(indirect)
-	);
+	ipcRenderer.sendToHost('hamsket.updateBadge', window.hamsket.parseIntOrZero(direct), window.hamsket.parseIntOrZero(indirect));
 };
 
 /**
@@ -61,13 +54,10 @@ window.hamsket.parseIntOrZero = function (text) {
 
 window.hamsket.isInViewport = function(node) {
     const rect = node.getBoundingClientRect();
-
-    return rect.bottom > 0 &&
-        rect.right > 0 &&
+    return rect.bottom > 0 && rect.right > 0 &&
         rect.left < (window.innerWidth || document.documentElement.clientWidth) &&
         rect.top < (window.innerHeight || document.documentElement.clientHeight);
 };
-
 
 /**
  * Override to add notification click event to display Hamsket window and activate service tab
@@ -75,11 +65,7 @@ window.hamsket.isInViewport = function(node) {
 const NativeNotification = Notification;
 Notification = function(title, options) {
 	const notification = new NativeNotification(title, options);
-
-	notification.addEventListener('click', function() {
-		ipcRenderer.sendToHost('hamsket.showWindowAndActivateTab');
-	});
-
+	notification.addEventListener('click', () => { ipcRenderer.sendToHost('hamsket.showWindowAndActivateTab'); });
 	return notification;
 };
 
@@ -87,7 +73,7 @@ Notification.prototype = NativeNotification.prototype;
 Notification.permission = NativeNotification.permission;
 Notification.requestPermission = NativeNotification.requestPermission.bind(Notification);
 
-window.close = function() { location.href = location.origin; };
+window.close = () => { location.href = location.origin; };
 
 // Electron really screwed up here. atob and btoa are broken in recent versions, so override them.
 window.atob = data => Buffer.from(data, "base64").toString("latin1");

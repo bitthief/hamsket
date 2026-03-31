@@ -1,0 +1,10 @@
+$dark-mode: dynamic(true);
+$base-color: dynamic(#2E658E);
+$base-light-color: lighten($base-color, 25%);
+$enable-font-icons: dynamic(true);
+$font-family: dynamic('Roboto', sans-serif);
+$font-icon-font-family: dynamic('Font Awesome 5 Free');
+$include-ie: dynamic(false);
+$include-ff: dynamic(false);
+$include-safari: dynamic(false);
+$include-opera: dynamic(false);

@@ -8,7 +8,7 @@
 	"author": "TheGoddessInari <thegoddessinari@gmail.com>",
 	"license": "GPL-3.0",
 	"engines": {
-		"node": ">=14.0.0"
+		"node": ">=18.0.0"
 	},
 	"repository": {
 		"type": "git",
@@ -37,8 +37,9 @@
 		"debug": "electron --inspect build/production/Hamsket",
 		"test": "mocha test/tests/**/*.spec.js",
 		"buildversion": "git show --pretty=\"%h %d %cD\" -s > build/production/Hamsket/BUILDVERSION || node -p -e \"require('./build/production/Hamsket/package.json').version\" > build/production/Hamsket/BUILDVERSION",
+		"patch-license": "node -e \"const f='build/production/Hamsket/';const j=require('fs');['app.json','app.jsonp'].forEach(n=>{const p=f+n;let s=j.readFileSync(p,'utf8');s=s.replace(/\\\"license\\\":\\\"trial\\\"/g,'\\\"license\\\":\\\"commercial\\\"');j.writeFileSync(p,s)});j.rmSync(f+'resources/ext/ext-watermark',{recursive:true,force:true});console.log('Patched trial license')\"",
 		"clean": "shx rm -rf ./build/production",
-		"compile": "sencha app build && shx cp package.json package-lock.json build/production/Hamsket/ && npm run buildversion",
+		"compile": "sencha app build && shx cp package.json package-lock.json build/production/Hamsket/ && npm run buildversion && npm run patch-license",
 		"recompile": "npm run distclean && npm run compile",
 		"distclean": "shx rm -rf ./dist",
 		"distclean:win": "shx rm -rf ./dist/win-{ia32-,}unpacked",
@@ -81,23 +82,22 @@
 		"dist": "npm run repack"
 	},
 	"dependencies": {
-		"@electron/remote": "^2.0.9",
-		"auto-launch": "^5.0.5",
-		"electron-context-menu": "^3.6.1",
-		"electron-store": "^8.1.0",
-		"mime": "^3.0.0",
-		"tmp": "^0.2.1"
+		"@electron/remote": "2.1.3",
+		"auto-launch": "5.0.6",
+		"electron-context-menu": "4.1.2",
+		"electron-store": "8.1.0",
+		"mime": "3.0.0",
+		"tmp": "0.2.1"
 	},
 	"devDependencies": {
-		"@electron/asar": "^3.2.0",
-		"chai": "^4.3.7",
-		"crowdin": "^3.5.0",
-		"csvjson": "^5.1.0",
-		"electron": "^22.0.3",
-		"electron-builder": "~23.6.0",
-		"mocha": "^10.2.0",
-		"prettier": "^2.8.2",
-		"shx": "^0.3.4",
-		"spectron": "^19.0.0"
+		"@electron/asar": "3.2.7",
+		"chai": "5.0.0-alpha.0",
+		"crowdin": "3.5.0",
+		"csvjson": "5.1.0",
+		"electron": "35.7.5",
+		"electron-builder": "26.8.1",
+		"mocha": "10.2.0",
+		"prettier": "3.0.3",
+		"shx": "0.3.4"
 	}
 }

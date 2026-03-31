@@ -1,14 +1,14 @@
 /*
  * Aplica estilo a la barra de login
  */
-@include extjs-toolbar-ui(
-	$ui: 'default',
-	$background-color: $base-color
-);
-
-@include extjs-toolbar-ui(
+ @include extjs-toolbar-ui(
 	$ui: 'default',
 	$background-color: #31B96E
+);
+
+ @include extjs-toolbar-ui(
+	$ui: 'main',
+	$background-color: $base-color
 );
 
 .x-toolbar-newversion {

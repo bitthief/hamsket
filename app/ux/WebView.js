@@ -4,22 +4,19 @@
 Ext.define('Hamsket.ux.WebView',{
 	 extend: 'Ext.panel.Panel'
 	,xtype: 'webview'
-
 	,requires: [
 		 'Hamsket.util.Format'
 		,'Hamsket.util.Notifier'
 		,'Hamsket.util.UnreadCounter'
 		,'Hamsket.util.IconLoader'
 	]
-
 	// private
 	,zoomLevel: 0
 	,currentUnreadCount: 0
 	,isReady: false
-
 	// CONFIG
 	,hideMode: 'offsets'
-	,initComponent(config) {
+	,initComponent: function(config) {
 		const me = this;
 
 		function getLocation(href) {
@@ -49,8 +46,9 @@ Ext.define('Hamsket.ux.WebView',{
 			,muted: me.record.get('muted')
 			,tabConfig: {
 				listeners: {
-					afterrender ( btn ) {
-						btn.el.on('contextmenu', function(e) {
+					afterrender: function(btn) {
+						// context menu
+						btn.el.on('contextmenu', (e) => {
 							btn.showMenu('contextmenu');
 							e.stopEvent();
 						});
@@ -72,14 +70,14 @@ Ext.define('Hamsket.ux.WebView',{
 									,items: [
 										{
 											 text: 'Back'
-											,glyph: 'XF053@FontAwesome'
+											,glyph: 0xF053
 											,flex: 1
 											,scope: me
 											,handler: me.goBack
 										}
 										,{
 											 text: 'Forward'
-											,glyph: 'XF054@FontAwesome'
+											,glyph: 0xF054
 											,iconAlign: 'right'
 											,flex: 1
 											,scope: me
@@ -92,33 +90,33 @@ Ext.define('Hamsket.ux.WebView',{
 						,'-'
 						,{
 							 text: 'Zoom In'
-							,glyph: 'XF00E@FontAwesome'
+							,glyph: 0xF00E
 							,scope: me
 							,handler: me.zoomIn
 						}
 						,{
 							 text: 'Zoom Out'
-							,glyph: 'XF010@FontAwesome'
+							,glyph: 0xF010
 							,scope: me
 							,handler: me.zoomOut
 						}
 						,{
 							 text: 'Reset Zoom'
-							,glyph: 'XF002@FontAwesome'
+							,glyph: 0xF002
 							,scope: me
 							,handler: me.resetZoom
 						}
 						,'-'
 						,{
 							 text: locale['app.webview[0]']
-							,glyph: 'XF021@FontAwesome'
+							,glyph: 0xF021
 							,scope: me
 							,handler: me.reloadService
-						}
+						},
 						,'-'
 						,{
 							 text: locale['app.webview[3]']
-							,glyph: 'XF121@FontAwesome'
+							,glyph: 0xF121
 							,scope: me
 							,handler: me.toggleDevTools
 						}
@@ -135,19 +133,16 @@ Ext.define('Hamsket.ux.WebView',{
 
 		me.callParent(config);
 	}
-
-	,onBeforeDestroy() {
+	,onBeforeDestroy: function() {
 		const me = this;
 
 		me.setUnreadCount(0);
 	}
-
-	,webViewConstructor( enabled ) {
+	,webViewConstructor: function( enabled ) {
 		const me = this;
 
-		let cfg;
 		enabled = enabled || me.record.get('enabled');
-
+		let cfg;
 		cfg = !enabled ? [{
 				 xtype: 'container'
 				,html: '<h3>Service Disabled</h3>'
@@ -165,7 +160,7 @@ Ext.define('Hamsket.ux.WebView',{
 					,partition: 'persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '')
 					,allowtransparency: 'on'
 					,autosize: 'on'
-					,webpreferences: 'contextIsolation=no,enableRemoteModule=yes,spellcheck=no,nativeWindowOpen=yes'
+					,webpreferences: 'contextIsolation=no,spellcheck=no'
 					//,disablewebsecurity: 'on' // Disabled because some services (Like Google Drive) dont work with this enabled
 					,allowpopups: 'on'
 					,userAgent: me.getUserAgent()
@@ -175,8 +170,7 @@ Ext.define('Hamsket.ux.WebView',{
 
 		return cfg;
 	}
-
-	,statusBarConstructor(floating) {
+	,statusBarConstructor: function(floating) {
 		const me = this;
 
 		return {
@@ -186,9 +180,9 @@ Ext.define('Hamsket.ux.WebView',{
 			,y: floating ? '-18px' : 'auto'
 			,height: 19
 			,dock: 'bottom'
-			,defaultText: '<i class="fa fa-check fa-fw" aria-hidden="true"></i> Ready'
+			,defaultText: '<i class="x-fas fa-check fa-fw" aria-hidden="true"></i> Ready'
 			,busyIconCls : ''
-			,busyText: '<i class="fa fa-circle-o-notch fa-spin fa-fw"></i> ' + locale['app.webview[4]']
+			,busyText: '<i class="x-fas fa-circle-notch fa-spin fa-fw"></i> ' + locale['app.webview[4]']
 			,items: [
 				{
 					 xtype: 'tbtext'
@@ -196,7 +190,7 @@ Ext.define('Hamsket.ux.WebView',{
 				}
 				,{
 					 xtype: 'button'
-					,glyph: 'XF00D@FontAwesome'
+					,glyph: 0xF00D
 					,scale: 'small'
 					,ui: 'decline'
 					,padding: 0
@@ -211,49 +205,45 @@ Ext.define('Hamsket.ux.WebView',{
 			]
 		};
 	}
-
-	,onAfterRender() {
+	,onAfterRender: function() {
 		const me = this;
+
+		// Show and hide spinner when is loading
+		const webview = me.getWebView();
 
 		if ( !me.record.get('enabled') )
 			return;
 
-		const webview = me.getWebView();
-		me.errorCodeLog = [];
-
 		// Notifications in WebView
 		me.setNotifications(localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) ? false : me.record.get('notifications'));
 
-		// Show and hide spinner when is loading
-		webview.addEventListener('did-start-loading', function() {
+		webview.addEventListener('did-start-loading', () => {
 			console.info('Start loading..', me.src);
 			if ( !me.down('statusbar').closed || !me.down('statusbar').keep )
 				me.down('statusbar').show();
 			me.down('statusbar').showBusy();
 		});
 
-		webview.addEventListener('did-stop-loading', function() {
+		webview.addEventListener('did-stop-loading', () => {
 			me.down('statusbar').clearStatus( { useDefaults: true } );
 			if ( !me.down('statusbar').keep )
 				me.down('statusbar').hide();
 		});
 
 		// On search text
-		webview.addEventListener('found-in-page', function(e) {
-			me.onSearchText(e.result);
-		});
+		webview.addEventListener('found-in-page', (e) => { me.onSearchText(e.result); });
 
 		// On search text
-		webview.addEventListener('did-fail-load', function(e) {
+		me.errorCodeLog = [];
+		webview.addEventListener('did-fail-load', (e) => {
 			console.info('The service failed loading', me.src, e);
 
 			if ( me.record.get('disableAutoReloadOnFail') || !e.isMainFrame )
 				return;
+
 			me.errorCodeLog.push(e.errorCode);
 
-			var attempt = me.errorCodeLog.filter(function(code) {
-				return code === e.errorCode;
-			});
+			var attempt = me.errorCodeLog.filter((code) => { return code === e.errorCode; });
 
 			// Error codes: https://cs.chromium.org/chromium/src/net/base/net_error_list.h
 			var msg = [];
@@ -276,7 +266,7 @@ Ext.define('Hamsket.ux.WebView',{
 				case -3: // An operation was aborted (due to user action) I think that gmail an other pages that use iframes stop some of them making this error fired
 					if ( attempt.length <= 4 )
 						return;
-					setTimeout(() => me.reloadService(), 200);
+					setTimeout(() => { me.reloadService(); }, 200);
 					me.errorCodeLog = [];
 					break;
 				case -2:
@@ -287,7 +277,7 @@ Ext.define('Hamsket.ux.WebView',{
 				case -100:
 				case -101:
 				case -105:
-					attempt.length > 4 ? me.onFailLoad(msg[e.errorCode]) : setTimeout(() => me.reloadService(), 2000);
+					attempt.length > 4 ? me.onFailLoad(msg[e.errorCode]) : setTimeout(() => { me.reloadService(); }, 2000);
 					break;
 				case -106:
 					me.onFailLoad(msg[e.errorCode]);
@@ -303,7 +293,7 @@ Ext.define('Hamsket.ux.WebView',{
 			}
 		});
 
-		webview.addEventListener('did-finish-load', function(e) {
+		webview.addEventListener('did-finish-load', (e) => {
 			Hamsket.app.setTotalServicesLoaded( Hamsket.app.getTotalServicesLoaded() + 1 );
 
 			// Apply saved zoom level
@@ -314,22 +304,23 @@ Ext.define('Hamsket.ux.WebView',{
 		});
 
 		// Open links in default browser
-		/*webview.addEventListener('new-window', function(e) {
+		// Removed in Electron 21
+		webview.addEventListener('new-window', (e) => {
 			e.preventDefault();
-			const protocol = require('url').parse(e.url).protocol;
+			const { URL } = require('url');
+			const url = new URL(e.url);
+			const protocol = url.protocol;
 
 			// Block some deep links to prevent native desktop app is opened (e.g. Slack, Teams, Zoom)
 			if ( ['discord:', 'slack:', 'skype:', 'teams:', 'zoom:'].includes(protocol) )
 				return;
 
 			// Allow deep links
-			if ( !['http:',  'https:', 'about:'].includes(protocol) )
+			if ( !['http:',  'https:', 'about:', 'file:'].includes(protocol) )
 				return require('electron').shell.openExternal(e.url);
-		});*/
-
-		webview.addEventListener('will-navigate', function(e, url) {
-			e.preventDefault();
 		});
+
+		webview.addEventListener('will-navigate', (e, url) => { e.preventDefault(); });
 
 		function JSApplyCSS() {
 			if ( me.record ) {
@@ -348,34 +339,10 @@ Ext.define('Hamsket.ux.WebView',{
 					}
 				}
 			}
-		}
+		};
 
-		webview.addEventListener('dom-ready', function(e) {
+		webview.addEventListener('dom-ready', (e) => {
 			me.isReady = true;
-
-			// Open links in default browser
-			// Electron 22+
-			me.getWebContents().then(webContents => {
-				webContents.setWindowOpenHandler((details) => {
-					const { URL } = require('url');
-					const url = new URL(details.url);
-					const protocol = url.protocol;
-					switch ( details.disposition ) {
-						case 'new-window': {
-							// Allow deep links
-							if ( !['http:',  'https:', 'about:'].includes(protocol) )
-								require('@electron/remote').shell.openExternal(url.href);
-
-							return { action: 'deny' };
-						}
-						default:
-							return { action: 'deny' };
-					}
-				});
-				return webContents;
-			}).catch(error => {
-				console.error(error);
-			});
 
 			// Mute WebView
 			if ( me.record.get('muted') || localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) )
@@ -419,6 +386,7 @@ Ext.define('Hamsket.ux.WebView',{
 						css_inject += custom_css;
 					}
 				}
+
 				// Use passive listeners by default
 				let passive_event_listeners = Ext.getStore('ServicesList').getById(me.record.get('type')).get('passive_event_listeners');
 				if (passive_event_listeners && me.record.get('passive_event_listeners')) {
@@ -448,9 +416,36 @@ Ext.define('Hamsket.ux.WebView',{
 			// Scroll always to top (bug)
 			js_inject += 'document.body.scrollTop=0;';
 
-			// Handle Certificate Errors
+			// Open links in default browser
+			// Replace in Electron 21+
 			me.getWebContents().then(webContents => {
-				webContents.on('certificate-error', function(event, url, error, certificate, callback) {
+				webContents.setWindowOpenHandler((details) => {
+					const { URL } = require('url');
+					const url = new URL(details.url);
+					const protocol = url.protocol;
+
+					// Block some deep links to prevent native desktop app is opened (e.g. Slack, Teams, Zoom)
+					if ( ['discord:', 'slack:', 'skype:', 'teams:', 'zoom:'].includes(protocol) )
+						return { action: 'deny' };
+
+					// Allow deep links
+					if ( !['file:', 'http:',  'https:', 'about:'].includes(protocol) ) {
+						require('@electron/remote').shell.openExternal(url.href);
+						return { action: 'allow' };
+					}
+
+					console.log("Blocked by 'setWindowOpenHandler': " + url.href);
+					return { action: 'deny' };
+				});
+
+				return webContents;
+			}).catch((error) => {
+				console.error(error);
+			});
+
+			me.getWebContents().then(webContents => {
+				// Handle Certificate Errors
+				webContents.on('certificate-error', (event, url, error, certificate, callback) => {
 					if ( me.record.get('trust') ) {
 						event.preventDefault();
 						callback(true);
@@ -460,13 +455,12 @@ Ext.define('Hamsket.ux.WebView',{
 
 					me.down('statusbar').keep = true;
 					me.down('statusbar').show();
-					me.down('statusbar').setStatus({
-						text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certificate Warning'
-					});
+					me.down('statusbar').setStatus({text: '<i class="x-fas fa-exclamation-triangle fa-fw" aria-hidden="true"></i> Certificate Warning'});
 					me.down('statusbar').down('button').show();
 				});
+
 				return webContents;
-			}).catch(error => {
+			}).catch((error) => {
 				console.error(error);
 			});
 
@@ -474,15 +468,11 @@ Ext.define('Hamsket.ux.WebView',{
 			webview.insertCSS(css_inject);
 		});
 
-		webview.addEventListener('load-commit', function() {
-			JSApplyCSS();
-		});
+		webview.addEventListener('load-commit', () => { JSApplyCSS(); });
 
-		webview.addEventListener('did-frame-finish-load', function() {
-			JSApplyCSS();
-		});
+		webview.addEventListener('did-frame-finish-load', () => { JSApplyCSS(); });
 
-		webview.addEventListener('ipc-message', function(event) {
+		webview.addEventListener('ipc-message', (event) => {
 			const channel = event.channel;
 			switch (channel) {
 				case 'hamsket.setUnreadCount':
@@ -497,7 +487,7 @@ Ext.define('Hamsket.ux.WebView',{
 				case 'hamsket.showWindowAndActivateTab':
 					showWindowAndActivateTab(event);
 					break;
-			}
+			};
 
 			/**
 			 * Handles 'hamsket.clearUnreadCount' messages.
@@ -530,9 +520,14 @@ Ext.define('Hamsket.ux.WebView',{
 				currentWindow.show();
 				currentWindow.focus();
 				const tabPanel = Ext.cq1('app-main');
-				tabPanel.getActiveTab().blur();
-				tabPanel.setActiveTab(me);
-				tabPanel.getActiveTab().focus();
+				if (tabPanel != undefined) {
+					tabPanel.getActiveTab().blur();
+					abPanel.setActiveTab(me);
+					tabPanel.getActiveTab().focus();
+				}
+				else {
+					console.error('Unable to show window and activate tab, app-main is undefined!');
+				}
 			}
 
 			function handleUpdateBadge(event) {
@@ -553,31 +548,30 @@ Ext.define('Hamsket.ux.WebView',{
 		/**
 		 * Register page title update event listener only for services that don't specify a js_unread
 		 */
-		if (Ext.getStore('ServicesList').getById(me.record.get('type')).get('js_unread') === '' &&
-			 me.record.get('js_unread') === '') {
-				webview.addEventListener("page-title-updated", function(e) {
-				let count = e.title.match(/\(([^)]+)\)/); // Get text between (...)
+		if (Ext.getStore('ServicesList').getById(me.record.get('type')).get('js_unread') === '' && me.record.get('js_unread') === '') {
+			webview.addEventListener("page-title-updated", (e) => {
+				// Get text between (...)
+				let count = e.title.match(/\(([^)]+)\)/);
 				count = count ? count[1] : '0';
-				count = count === '•' ? count : Ext.isArray(count.match(/\d+/g)) ? count.match(/\d+/g).join("") : count.match(/\d+/g); // Some services have special characters. Example: (•)
+				// Some services have special characters. Example: (•)
+				count = count === '•' ? count : Ext.isArray(count.match(/\d+/g)) ? count.match(/\d+/g).join("") : count.match(/\d+/g);
 				count = count === null ? '0' : count;
 
 				me.setUnreadCount(count);
 			});
 		}
 
-		webview.addEventListener('did-navigate', function( e ) {
+		webview.addEventListener('did-navigate', (e) => {
 			if ( e.isMainFrame && me.record.get('type') === 'tweetdeck' )
-				Ext.defer(function() { webview.loadURL(e.newURL); }, 1000); // Applied a defer because sometimes is not redirecting. TweetDeck 2FA is an example.
+				Ext.defer(() => { webview.loadURL(e.newURL); }, 1000); // Applied a defer because sometimes is not redirecting. TweetDeck 2FA is an example.
 		});
 
-		webview.addEventListener('update-target-url', function( url ) {
-			me.down('statusbar #url').setText(url.url);
-		});
+		webview.addEventListener('update-target-url', (url) => { me.down('statusbar #url').setText(url.url); });
 	}
-	,setUnreadCount(newUnreadCount) {
+	,setUnreadCount: function(newUnreadCount) {
 		const me = this;
 
-		if ( !isNaN(newUnreadCount) && (function(x) { return (x | 0) === x; })(parseFloat(newUnreadCount)) && me.record.get('includeInGlobalUnreadCounter') === true) {
+		if ( !isNaN(newUnreadCount) && ((x) => { return (x | 0) === x; })(parseFloat(newUnreadCount)) && me.record.get('includeInGlobalUnreadCounter') === true) {
 			Hamsket.util.UnreadCounter.setUnreadCountForService(me.record.get('id'), newUnreadCount);
 		} else {
 			Hamsket.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
@@ -587,10 +581,11 @@ Ext.define('Hamsket.ux.WebView',{
 
 		me.doManualNotification(parseInt(newUnreadCount));
 	}
-	,refreshUnreadCount() {
-		this.setUnreadCount(this.currentUnreadCount);
-	}
+	,refreshUnreadCount: function() {
+		const me = this;
 
+		me.setUnreadCount(me.currentUnreadCount);
+	}
 	/**
 	 * Dispatch manual notification if
 	 * - service doesn't have notifications, so Hamsket does them
@@ -600,25 +595,23 @@ Ext.define('Hamsket.ux.WebView',{
 	 *
 	 * @param {int} count
 	 */
-	,doManualNotification(count) {
+	,doManualNotification: function(count) {
 		const me = this;
 
 		if (Ext.getStore('ServicesList').getById(me.type).get('manual_notifications') &&
-			me.currentUnreadCount < count &&
-			me.record.get('notifications') &&
+			me.currentUnreadCount < count && me.record.get('notifications') &&
 			!JSON.parse(localStorage.getItem('dontDisturb'))) {
-				Hamsket.util.Notifier.dispatchNotification(me, count);
+			Hamsket.util.Notifier.dispatchNotification(me, count);
 		}
 
 		me.currentUnreadCount = count;
 	}
-
 	/**
 	 * Sets the tab badge text depending on the service config param "displayTabUnreadCounter".
 	 *
 	 * @param {string} badgeText
 	 */
-	,setTabBadgeText(badgeText) {
+	,setTabBadgeText: function(badgeText) {
 		const me = this;
 
 		if (me.record.get('displayTabUnreadCounter') === true) {
@@ -627,44 +620,43 @@ Ext.define('Hamsket.ux.WebView',{
 			me.tab.setBadgeText('');
 		}
 	}
-
 	/**
 	 * Clears the unread counter for this view:
 	 * - clears the badge text
 	 * - clears the global unread counter
 	 */
-	,clearUnreadCounter() {
+	,clearUnreadCounter: function() {
 		const me = this;
 
 		me.tab.setBadgeText('');
+
 		Hamsket.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 	}
-
-	,reloadService(btn) {
+	,reloadService: function(btn) {
 		const me = this;
-		const webview = me.getWebView();
 
 		if ( me.record.get('enabled') ) {
+			const webview = me.getWebView();
+
 			me.clearUnreadCounter();
+
 			webview.loadURL(me.src);
 		}
 	}
-
-	,onFailLoad(v) {
+	,onFailLoad: function(v) {
 		const me = this;
 
 		me.errorCodeLog = [];
-		setTimeout(() => Ext.getCmp(me.id + 'statusbar').setStatus(
-			{ text: '<i class="fa fa-warning fa-fw" aria-hidden="true"></i> The service failed to load, Error: ' + v })
-			, 1000);
+
+		setTimeout(() => Ext.getCmp(me.id + 'statusbar').setStatus({ text: '<i class="x-fas fa-exclamation-triangle fa-fw" aria-hidden="true"></i> The service failed to load, Error: ' + v }), 1000);
 	}
-	,showSearchBox(v) {
+	,showSearchBox: function(v) {
 		const me = this;
+
 		if ( !me.record.get('enabled') )
 			return;
 
 		const webview = me.getWebView();
-
 		webview.stopFindInPage('keepSelection');
 		if (v) {
 			me.down('#searchBar').show();
@@ -676,8 +668,9 @@ Ext.define('Hamsket.ux.WebView',{
 
 		me.down('#searchBar displayfield').setValue('');
 	}
-	,doSearchText(field, newValue, oldValue, eOpts, forward = true) {
+	,doSearchText: function(field, newValue, oldValue, eOpts, forward = true) {
 		const me = this;
+
 		const webview = me.getWebView();
 
 		if ( newValue === '' ) {
@@ -688,16 +681,16 @@ Ext.define('Hamsket.ux.WebView',{
 
 		webview.findInPage(newValue, { forward: forward, findNext: false, matchCase: false });
 	}
-	,onSearchText(result) {
+	,onSearchText: function(result) {
 		const me = this;
 
 		me.down('#searchBar displayfield').setValue(result.activeMatchOrdinal + '/' + result.matches);
 	}
-	,toggleDevTools(btn) {
+	,toggleDevTools: function(btn) {
 		const me = this;
-		const webview = me.getWebView();
 
 		if ( me.record.get('enabled')) {
+			const webview = me.getWebView();
 			if (webview.isDevToolsOpened()) {
 				webview.closeDevTools();
 			} else {
@@ -705,39 +698,37 @@ Ext.define('Hamsket.ux.WebView',{
 			}
 		}
 	}
-	,setURL(url) {
+	,setURL: function(url) {
 		const me = this;
-		const webview = me.getWebView();
 
 		me.src = url;
 
 		if ( me.record.get('enabled') ) {
+			const webview = me.getWebView();
 			webview.loadURL(url);
 		}
 	}
-
-	,setAudioMuted(muted, calledFromDisturb) {
+	,setAudioMuted: function(muted, calledFromDisturb) {
 		const me = this;
-		const webview = me.getWebView();
 
 		me.muted = muted;
 
 		if ( !muted && !calledFromDisturb && JSON.parse(localStorage.getItem('dontDisturb')) )
 			return;
 
-		if ( me.record.get('enabled') )
+		if ( me.record.get('enabled') ) {
+			const webview = me.getWebView();
 			webview.setAudioMuted(muted);
+		}
 	}
-
-	,closeStatusBar() {
+	,closeStatusBar: function() {
 		const me = this;
 
 		me.down('statusbar').hide();
 		me.down('statusbar').closed = true;
 		me.down('statusbar').keep = false;
 	}
-
-	,setStatusBar(keep) {
+	,setStatusBar: function(keep) {
 		const me = this;
 
 		me.removeDocked(me.down('statusbar'), true);
@@ -750,26 +741,25 @@ Ext.define('Hamsket.ux.WebView',{
 
 		me.down('statusbar').keep = keep;
 	}
-
-	,setNotifications(notification, calledFromDisturb) {
+	,setNotifications: function(notification, calledFromDisturb) {
 		const me = this;
+
 		const webview = me.getWebView();
 
 		me.notifications = notification;
-
 		if ( notification && !calledFromDisturb && JSON.parse(localStorage.getItem('dontDisturb')) )
 			return;
 
-		if ( me.record.get('enabled') )
+		if ( me.record.get('enabled') ) {
 			ipc.send('setServiceNotifications', webview.partition, notification);
+		}
 	}
-
-	,setEnabled(enabled) {
+	,setEnabled: function(enabled) {
 		const me = this;
 
 		me.clearUnreadCounter();
-
 		me.removeAll();
+
 		me.add(me.webViewConstructor(enabled));
 		if ( enabled ) {
 			me.resumeEvent('afterrender');
@@ -781,64 +771,84 @@ Ext.define('Hamsket.ux.WebView',{
 			me.tab.setStyle('-webkit-filter', 'grayscale(1)');
 		}
 	}
-
-	,goBack() {
+	,goBack: function() {
 		const me = this;
-		const webview = me.getWebView();
 
-		if ( me.record.get('enabled') )
+		if ( me.record.get('enabled') ) {
+			const webview = me.getWebView();
 			webview.goBack();
+		}
 	}
-
-	,goForward() {
+	,goForward: function() {
 		const me = this;
-		const webview = me.getWebView();
 
-		if ( me.record.get('enabled') )
+		if ( me.record.get('enabled') ) {
+			const webview = me.getWebView();
 			webview.goForward();
+		}
 	}
-
-	,setZoomLevel(level) {
+	,setZoomLevel: function(level) {
 		this.getWebContents().then(webContents => {
 			webContents.zoomLevel = level;
 			return webContents;
-		}).catch(error => console.log(error));
+		}).catch((error) => {
+			console.log(error);
+		});
 	}
-	,zoomIn() {
+	,zoomIn: function() {
 		const me = this;
 
 		me.zoomLevel = me.zoomLevel + 1;
+
 		if ( me.record.get('enabled') ) {
 			me.record.set('zoomLevel', me.zoomLevel);
 			me.setZoomLevel(me.zoomLevel);
 		}
 	}
-	,zoomOut() {
+	,zoomOut: function() {
 		const me = this;
 
 		me.zoomLevel = me.zoomLevel - 1;
+
 		if ( me.record.get('enabled') ) {
 			me.record.set('zoomLevel', me.zoomLevel);
 			me.setZoomLevel(me.zoomLevel);
 		}
 	}
-	,resetZoom() {
+	,resetZoom: function() {
 		const me = this;
 
 		me.zoomLevel = 0;
+
 		if ( me.record.get('enabled') ) {
 			me.record.set('zoomLevel', me.zoomLevel);
 			me.setZoomLevel(me.zoomLevel);
 		}
 	}
-	,getWebView() {
-		if ( this.record.get('enabled') ) {
-			return this.down('component').el.dom;
-		} else {
+	,getWebView: function() {
+		const me = this;
+
+		if (me.record.get('enabled')) {
+			const element = me.down('component').el;
+			if (element !== undefined) {
+				const elementDom = element.dom;
+				if (elementDom !== undefined) {
+					return elementDom;
+				}
+				else {
+					console.error('Failed to get web view, element DOM was undefined!');
+				}
+			}
+			else {
+				console.error('Failed to get web view, element was undefined!');
+			}
+
 			return false;
 		}
+
+		return false;
 	}
-	,getWebContents() {
+	,getWebContents: function() {
 		const promise = new Promise((resolve, reject) => {
 			const webview = this.getWebView();
 			const webContents = () => {
@@ -847,28 +857,21 @@ Ext.define('Hamsket.ux.WebView',{
 				const webContents = remote.webContents.fromId(id);
 				return webContents;
 			};
-			if (this.record.get('enabled') && this.isReady) {
-				resolve(webContents());
-			} else {
-				webview.addEventListener("dom-ready", () => {
-					resolve(webContents());
-				});
-			}
+			if (this.record.get('enabled') && this.isReady) { resolve(webContents()); }
+			else webview.addEventListener("dom-ready", () => { resolve(webContents()); });
 		});
 		return promise;
 	}
-	,getUserAgent() {
+	,getUserAgent: function() {
 		const me = this;
+
 		const user_platform = me.record.get('os_override');
 		const service_platform = Ext.getStore('ServicesList').getById(me.record.get('type')).get('os_override');
 		const platform = user_platform ? user_platform : service_platform ? service_platform : '';
 		const user_version = me.record.get('chrome_version');
 		const service_version = Ext.getStore('ServicesList').getById(me.record.get('type')).get('chrome_version');
 		const chrome_version = user_version ? user_version : service_version ? service_version : '';
-		const default_ua = `Mozilla/5.0` +
-		` (${me.getOSPlatform(platform)})` +
-		` AppleWebKit/537.36 (KHTML, like Gecko)` +
-		` Chrome/${me.getChromeVersion(chrome_version)} Safari/537.36`;
+		const default_ua = `Mozilla/5.0` + ` (${me.getOSPlatform(platform)})` + ` AppleWebKit/537.36 (KHTML, like Gecko)` + ` Chrome/${me.getChromeVersion(chrome_version)} Safari/537.36`;
 		// NOTE: Keep just in case we need to go back to the basics.
 		// const default_ua = window.navigator.userAgent
 		// 					.replace(`Electron/${me.getElectronVersion()} `,'')
@@ -878,15 +881,18 @@ Ext.define('Hamsket.ux.WebView',{
 		const ua = (platform || chrome_version) ? default_ua : user_ua ? user_ua : service_ua ? service_ua : default_ua;
 		return ua;
 	}
-	,updateUserAgent() {
+	,updateUserAgent: function() {
 		const me = this;
+
 		me.getWebContents().then(webContents => {
 			webContents.setUserAgent(me.getUserAgent());
 			return webContents;
-		}).catch(error => console.error(error));
+		})
+		.catch((error) => { console.error(error); });
 	}
-	,getOSArch(platform) {
+	,getOSArch: function(platform) {
 		const me = this;
+
 		const remote = require('@electron/remote');
 		platform = platform ? platform : remote.require('os').platform();
 		let arch = remote.require('os').arch();
@@ -908,7 +914,7 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 		return arch;
 	}
-	,getOSArchType() {
+	,getOSArchType: function() {
 		let arch = require('@electron/remote').require('os').arch();
 
 		switch (arch) {
@@ -939,8 +945,9 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 		return arch;
 	}
-	,getOSPlatform(platform) {
+	,getOSPlatform: function(platform) {
 		const me = this;
+
 		platform = platform ? platform : require('@electron/remote').require('os').platform();
 		switch (platform) {
 			case 'win32':
@@ -963,23 +970,24 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 		return platform;
 	}
-	,isWindows(platform) {
+	,isWindows: function(platform) {
 		platform = platform ? platform : require('@electron/remote').require('os').platform();
 		return platform === 'win32';
 	}
-	,isMac(platform) {
+	,isMac: function(platform) {
 		platform = platform ? platform : require('@electron/remote').require('os').platform();
 		return platform === 'darwin';
 	}
-	,is32bit() {
+	,is32bit: function() {
 		const arch = require('@electron/remote').require('os').arch();
 		if (arch === 'ia32' || arch === 'x32')
 			return true;
 		else
 			return false;
 	}
-	,getOSRelease(platform) {
+	,getOSRelease: function(platform) {
 		const me = this;
+
 		const remote = require('@electron/remote');
 		if (me.isWindows(platform)) {
 			if (platform) {
@@ -994,19 +1002,19 @@ Ext.define('Hamsket.ux.WebView',{
 			return remote.require('os').release();
 		}
 	}
-	,getChromeVersion(version) {
+	,getChromeVersion: function(version) {
 		return version || require('@electron/remote').process.versions['chrome'];
 	}
-	,getElectronVersion() {
+	,getElectronVersion: function() {
 		return require('@electron/remote').process.versions['electron'];
 	}
-	,getAppVersion() {
+	,getAppVersion: function() {
 		return require('@electron/remote').app.getVersion();
 	}
-	,blur() {
+	,blur: function() {
 		this.getWebView().blur();
 	}
-	,focus() {
+	,focus: function() {
 		this.getWebView().focus();
 	}
 });

@@ -1,22 +1,20 @@
 Ext.define('Hamsket.view.add.AddController', {
 	extend: 'Ext.app.ViewController',
 	alias: 'controller.add-add',
-
 	requires: [
 		'Hamsket.util.UnreadCounter'
 	],
-
-	doCancel( btn ) {
+	doCancel: function( btn ) {
 		const me = this;
 
 		me.getView().close();
 	}
-
-	,doSave( btn ) {
+	,doSave: function( btn ) {
 		const me = this;
 
 		const win = me.getView();
-		if ( !win.down('form').isValid() ) return false;
+		if ( !win.down('form').isValid() )
+			return false;
 
 		const formValues = win.down('form').getValues();
 
@@ -58,19 +56,26 @@ Ext.define('Hamsket.view.add.AddController', {
 			// Change notifications of the Tab
 			view.setNotifications(formValues.notifications);
 			// Change the icon of the Tab
-			if ( win.record.get('type') === 'custom' && oldData.logo !== formValues.logo ) Ext.getCmp('tab_'+win.record.get('id')).setConfig('icon', formValues.logo === '' ? 'resources/icons/custom.png' : formValues.logo);
+			if ( win.record.get('type') === 'custom' && oldData.logo !== formValues.logo )
+				Ext.getCmp('tab_'+win.record.get('id')).setConfig('icon', formValues.logo === '' ? 'resources/icons/custom.png' : formValues.logo);
 			// Change the URL of the Tab
-			if ( oldData.url !== formValues.url ) view.setURL(formValues.url);
+			if ( oldData.url !== formValues.url )
+				view.setURL(formValues.url);
+
 			// Change the align of the Tab
 			if ( oldData.align !== formValues.align ) {
-				if ( formValues.align === 'left' ) {
-					Ext.cq1('app-main').moveBefore(view, Ext.getCmp('tbfill'));
+				if (Ext.cq1('app-main') != undefined) {
+					if ( formValues.align === 'left' ) {
+						Ext.cq1('app-main').moveBefore(view, Ext.getCmp('tbfill'));
+					} else {
+						Ext.cq1('app-main').moveAfter(view, Ext.getCmp('tbfill'));
+					}
 				} else {
-					Ext.cq1('app-main').moveAfter(view, Ext.getCmp('tbfill'));
+					console.error('Unable to move tab, app-main is undefined!');
 				}
 			}
 			// Apply the JS Code of the Tab
-			let showNotify=false;
+			let showNotify = false;
 			const standard_form_names = [
 				 'custom_js'
 				,'custom_css_complex'
@@ -101,8 +106,9 @@ Ext.define('Hamsket.view.add.AddController', {
 			}
 
 			if ( showNotify ) {
-				Ext.Msg.confirm(locale['app.window[8]'].toUpperCase(), 'Hamsket needs to reload the service to apply your changes. Do you want to do it now?', function( btnId ) {
-					if ( btnId === 'yes' ) view.reloadService();
+				Ext.Msg.confirm(locale['app.window[8]'].toUpperCase(), 'Hamsket needs to reload the service to apply your changes. Do you want to do it now?', ( btnId ) => {
+					if ( btnId === 'yes' )
+						view.reloadService();
 				});
 			}
 
@@ -116,6 +122,7 @@ Ext.define('Hamsket.view.add.AddController', {
 				formValues.url = formValues.cycleValue === '1' ? win.record.get('url').replace('___', formValues.url) : formValues.url;
 			}
 
+			const service_store = Ext.getStore('Services');
 			const service = Ext.create('Hamsket.model.Service', {
 				 type: win.record.get('id')
 				,logo: formValues.logo
@@ -138,7 +145,6 @@ Ext.define('Hamsket.view.add.AddController', {
 				,os_override: formValues.os_override
 				,chrome_version: formValues.chrome_version
 			});
-			const service_store = Ext.getStore('Services');
 			service_store.add(service);
 			service_store.sync();
 
@@ -161,26 +167,33 @@ Ext.define('Hamsket.view.add.AddController', {
 			};
 
 			if ( formValues.align === 'left' ) {
-				const tbfill = Ext.cq1('app-main').getTabBar().down('tbfill');
-				Ext.cq1('app-main').insert(Ext.cq1('app-main').getTabBar().items.indexOf(tbfill), tabData).show();
+				if (Ext.cq1('app-main') != undefined) {
+					const tbfill = Ext.cq1('app-main').getTabBar().down('tbfill');
+					Ext.cq1('app-main').insert(Ext.cq1('app-main').getTabBar().items.indexOf(tbfill), tabData).show();
+				} else {
+					console.error('Unable to insert tab, app-main is undefined!');
+				}
 			} else {
-				Ext.cq1('app-main').add(tabData).show();
+				if (Ext.cq1('app-main') != undefined) {
+					Ext.cq1('app-main').add(tabData).show();
+				} else {
+					console.error('Unable to add tab, app-main is undefined!');
+				}
 			}
 		}
 
 		win.close();
 	}
-
-	,onEnter(field, e) {
+	,onEnter: function(field, e) {
 		const me = this;
 
-		if ( e.getKey() === e.ENTER && field.up('form').isValid() ) me.doSave();
+		if ( e.getKey() === e.ENTER && field.up('form').isValid() )
+			me.doSave();
 	}
-
-	,onShow(win) {
+	,onShow: function(win) {
 		const me = this;
 
 		// Make focus to the name field
 		win.down('textfield[name="serviceName"]').focus(true, 100);
-	}
+	},
 });

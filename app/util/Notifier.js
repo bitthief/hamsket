@@ -3,11 +3,8 @@
  * Singleton class for notification dispatching.
  */
 Ext.define('Hamsket.util.Notifier', {
-
 	singleton: true,
-
-	constructor(config) {
-
+	constructor: function(config) {
 		config = config || {};
 
 		/**
@@ -39,7 +36,7 @@ Ext.define('Hamsket.util.Notifier', {
 		 * @param view				The view of the service
 		 * @param {number} count	The unread count
 		 */
-		this.dispatchNotification = function(view, count) {
+		this.dispatchNotification = (view, count) => {
 			const text = getNotificationText(view, count);
 
 			const notification = new Notification(Ext.String.htmlEncode(view.record.get('name')), {
@@ -48,7 +45,7 @@ Ext.define('Hamsket.util.Notifier', {
 				silent: view.record.get('muted')
 			});
 
-			notification.onclick = function(e) {
+			notification.onclick = (e) => {
 				view.showWindowAndActivateTab(e);
 			};
 		};

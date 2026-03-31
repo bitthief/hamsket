@@ -3,42 +3,32 @@
 */
 Ext.define('Hamsket.ux.mixin.Badge', {
 	extend: 'Ext.Mixin',
-
 	requires: [
 		//require this for the override
 		'Ext.button.Button'
 	],
-
 	mixinConfig: {
 		id: 'badge',
 		after: {
 			onRender: 'renderBadgeText'
 		}
 	},
-
 	config: {
 		badgeText: null
 	},
-
-	renderBadgeText() {
+	renderBadgeText: function() {
 		const badgeText = this.getBadgeText();
 
 		if (badgeText) {
 			this.updateBadgeText(badgeText);
 		}
 	},
-
-	updateBadgeText(badgeText, oldBadgeText) {
-		const me = this,
-			el = me.el;
+	updateBadgeText: function(badgeText, oldBadgeText) {
+		const me = this, el = me.el;
 
 		if (me.rendered) {
-			el.set({
-				'data-badge-text': badgeText !== '0' ? badgeText : ''
-			});
-
+			el.set({ 'data-badge-text': badgeText !== '0' ? badgeText : '' });
 			el.toggleCls(Ext.baseCSSPrefix + 'badge', !! badgeText);
-
 			me.fireEvent('badgetextchange', me, badgeText, oldBadgeText);
 		}
 	}

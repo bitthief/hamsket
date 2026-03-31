@@ -1,13 +1,12 @@
 Ext.define('Hamsket.model.Service', {
 	 extend: 'Ext.data.Model'
-
 	,identifier: 'sequential'
 	,proxy: {
 		 type: 'localstorage'
 		,id: 'services'
 	}
-
-	,fields: [{
+	,fields: [
+	{
 		 name: 'id'
 		,type: 'int'
 	},{

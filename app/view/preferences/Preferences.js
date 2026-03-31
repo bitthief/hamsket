@@ -1,19 +1,14 @@
-Ext.define('Hamsket.view.preferences.Preferences',{
+Ext.define('Hamsket.view.preferences.Preferences', {
 	 extend: 'Ext.window.Window'
 	,xtype: 'preferences'
-
 	,requires: [
 		 'Hamsket.view.preferences.PreferencesController'
 		,'Hamsket.view.preferences.PreferencesModel'
 		,'Ext.form.field.ComboBox'
 		,'Ext.form.field.Checkbox'
 	]
-
 	,controller: 'preferences-preferences'
-	,viewModel: {
-		type: 'preferences-preferences'
-	}
-
+	,viewModel: 'preferences-preferences'
 	,title: locale['preferences[0]']
 	,width: 420
 	,modal: true
@@ -34,19 +29,13 @@ Ext.define('Hamsket.view.preferences.Preferences',{
 			,handler: 'save'
 		}
 	]
-
-	,initComponent() {
+	,initComponent: function() {
 		const config = ipc.sendSync('getConfig');
 
 		let defaultServiceOptions = [];
 		defaultServiceOptions.push({ value: 'hamsketTab', label: 'Hamsket Tab' });
 		defaultServiceOptions.push({ value: 'last', label: 'Last Active Service' });
-		Ext.getStore('Services').each(function(rec) {
-			defaultServiceOptions.push({
-				 value: rec.get('id')
-				,label: Ext.String.htmlEncode(rec.get('name'))
-			});
-		});
+		Ext.getStore('Services').each((rec) => { defaultServiceOptions.push({ value: rec.get('id'), label: Ext.String.htmlEncode(rec.get('name')) }); });
 
 		this.items = [
 			{
@@ -251,6 +240,13 @@ Ext.define('Hamsket.view.preferences.Preferences',{
 						,value: config.disable_gpu
 					}
 					,{
+						xtype: 'checkbox'
+					   ,name: 'ignore_gpu_blacklist'
+					   ,boxLabel: 'Ignore GPU blacklist (needs to relaunch)'
+					   ,value: config.ignore_gpu_blacklist
+					   ,hidden: config.disable_gpu
+				    }
+					,{
 						 xtype: 'checkbox'
 						,name: 'enable_hidpi_support'
 						,boxLabel: locale['preferences[8]']
@@ -276,10 +272,10 @@ Ext.define('Hamsket.view.preferences.Preferences',{
 								,itemId: 'pass'
 								,flex: 1
 								,listeners: {
-									validitychange(field) {
+									validitychange: function(field) {
 										field.next().validate();
 									},
-									blur(field) {
+									blur: function(field) {
 										field.next().validate();
 									}
 								}
@@ -342,5 +338,14 @@ Ext.define('Hamsket.view.preferences.Preferences',{
 		];
 
 		this.callParent();
+	},
+	listeners: {
+		beforeclose: function ( win ) {
+			// Check default service is changed
+            const service = this.down('form').getForm().getFieldValues().default_service;
+			if ( service !== ipc.sendSync('getConfig').default_service ) {
+				localStorage.setItem('default_service', service);
+			}
+        }
 	}
 });

@@ -10,25 +10,43 @@
     "indexHtmlPath": "index.html",
 
     /**
-     * Comma-separated string with the paths of directories or files to search. Any classes
-     * declared in these locations will be available in your class "requires" or in calls
-     * to "Ext.require". The "app.dir" variable below is expanded to the path where the
-     * application resides (the same folder in which this file is located).
-     */
-    "classpath": "${app.dir}/app",
-
-    "overrides": "${app.dir}/overrides",
-
-    /**
      * The Sencha Framework for this application: "ext" or "touch".
      */
     "framework": "ext",
+
+     /**
+      * The toolkit to use. Select either "classic" or "modern".
+      */
+    "toolkit": "classic",
 
     /**
      * The name of the theme for this application.
      */
 
     "theme": "hamsket-default-theme",
+
+    /**
+     * Comma-separated string with the paths of directories or files to search. Any classes
+     * declared in these locations will be available in your class "requires" or in calls
+     * to "Ext.require". The "app.dir" variable below is expanded to the path where the
+     * application resides (the same folder in which this file is located).
+     */
+    "classpath": [
+        "${app.dir}/app",
+        "${app.dir}/ux",
+        "${app.dir}/${toolkit.name}/src"
+    ],
+
+    "overrides": [
+        "${app.dir}/overrides",
+        "${app.dir}/locale/${app.locale}",
+        "${app.dir}/${toolkit.name}/overrides",
+        "${app.dir}/${toolkit.name}/locale/${app.locale}"
+    ],
+
+    "locale": [
+        "en"
+    ],
 
     /**
      * The list of required packages (with optional versions; default is "latest").
@@ -40,13 +58,17 @@
      *      ]
      */
     "requires": [
-		"ext-locale"
+        "font-awesome",
+        "font-ext",
+        "ux",
+        "locale",
+        "package-loader"
     ],
-    "language":
-    {
+
+    "language": {
         "js":{
-            "input": "ES8",
-            "output": "ES8"
+            "input": "NEXT",
+            "output": "NEXT"
         }
     },
 
@@ -62,7 +84,28 @@
          * root namespace, change this to "". Doing so would change the mapping of
          * "Hamsket.view.Foo" to "sass/src/Hamsket/view/Foo.scss".
          */
-        "namespace": "Hamsket"
+        "namespace": "Hamsket",
+
+        "src": [
+            "${app.dir}/sass/src",
+            "${app.dir}/${toolkit.name}/sass/src",
+            "${app.dir}/${theme.name}/sass/src"
+        ],
+
+        "var": [
+            "${app.dir}/sass/var/all.scss",
+            "${app.dir}/sass/var",
+            "${app.dir}/${toolkit.name}/sass/var/all.scss",
+            "${app.dir}/${toolkit.name}/sass/var",
+            "${app.dir}/${theme.name}/sass/var/all.scss",
+            "${app.dir}/${theme.name}/sass/var"
+        ],
+
+        "etc": [
+            "${app.dir}/sass/etc/all.scss",
+            "${app.dir}/${toolkit.name}/sass/etc/all.scss",
+            "${app.dir}/${theme.name}/sass/etc/all.scss"
+        ]
     },
 
     /**
@@ -107,7 +150,7 @@
      *
      */
     "js": [
-		{
+        {
             "path": "${framework.dir}/build/ext-all-rtl.js"
         },
         {
@@ -146,9 +189,11 @@
      */
     "css": [
         {
-            "path": "bootstrap.css",
-            "bootstrap": true,
-            "bundle": true
+            "path": "${build.out.css.path}",
+            "bundle": true,
+            "exclude": [
+                "fashion"
+            ]
         }
     ],
 
@@ -183,7 +228,8 @@
         "compressor": {
             "type": "closure",
             "compression": "simple",
-            "polyfills": "none"
+            "polyfills": "auto",
+            "warningLevel": "quiet"
         }
     },
 
@@ -262,6 +308,19 @@
      */
     "output": {
         "base": "${workspace.build.dir}/${build.environment}/${app.name}",
+        "resources": {
+            "path": "./resources",
+            "shared": "./resources",
+            "images": "./resources/images",
+            "fonts": "./resources/fonts",
+            "icons": "./resources/icons",
+            "languages": "./resources/languages",
+            "locale": "./resources/locale",
+            "logo": "./resources/logo",
+            "js": "./resources/js",
+            "toolkit": "${toolkit.name}/resources",
+            "base": "."
+        },
         "appCache": {
             "enable": true
         }
@@ -276,12 +335,17 @@
          */
         "cache": [
             "index.html",
-            "app.js",
-            "resources/Hamsket-all.css",
+            "resources/auth0.png",
+            "resources/flag.png",
             "resources/Icon.png",
             "resources/Icon.ico",
             "resources/IconTray.png",
+            "resources/IconTray@2x.png",
+            "resources/IconTray@4x.png",
+            "resources/IconTrayUnread.ico",
             "resources/IconTrayUnread.png",
+            "resources/IconTrayUnread@2x.png",
+            "resources/IconTrayUnread@4x.png",
             "resources/IconTrayUnread.ico"
         ],
         /**
@@ -299,11 +363,74 @@
     /**
      * Extra resources to be copied along when build
      */
-    "resources": [
-        "app",
-        "electron",
-        "ext/packages/ext-locale/build",
-        "masterpassword.html"
+     "resources": [
+        {
+            "path": "app",
+            "mode": "relative"
+        },
+        {
+            "path": "electron",
+            "mode": "relative"
+        },
+        {
+            "path": "masterpassword.html",
+            "mode": "relative"
+        },
+        {
+            "path": "packages",
+            "mode": "relative"
+        },
+        {
+            "path": "resources",
+            "output": "shared"
+        },
+        {
+            "path": "resources/fonts",
+            "output": "fonts"
+        },
+        {
+            "path": "resources/icons",
+            "output": "icons"
+        },
+        {
+            "path": "resources/images",
+            "output": "images"
+        },
+        {
+            "path": "resources/languages",
+            "output": "languages"
+        },
+        {
+            "path": "resources/locale",
+            "output": "locale"
+        },
+        {
+            "path": "resources/logo",
+            "output": "logo"
+        },
+        {
+            "path": "resources/js",
+            "output": "js"
+        },
+        {
+            "path": "${toolkit.name}/resources",
+            "mode": "relative"
+        },
+        {
+            "path": "${toolkit.name}/resources/images",
+            "output": "images"
+        },
+        {
+            "path": "${toolkit.name}/sass",
+            "mode": "relative"
+        },
+        {
+            "path": "${toolkit.name}/src",
+            "mode": "relative"
+        },
+        {
+            "path": "./resources"
+        }
     ],
 
     /**
@@ -330,11 +457,23 @@
             }
         ]
     },
+
     "fashion": {
         "inliner": {
-            "enable": true
+            "enable": true,
+            "excludes": [
+                ".*OpenSans.*",
+                ".*font.?awesome.*",
+                ".*ExtJS.*",
+                ".*icomoon.*"
+            ]
         }
     },
+
+    "properties": {
+        "app.packages.dir": "${app.dir}/packages"
+    },
+
     /**
      * Uniquely generated id for this application, used as prefix for localStorage keys.
      * Normally you should never change this value.

@@ -1,7 +1,7 @@
 Ext.define('Hamsket.model.ServiceList', {
 	 extend: 'Ext.data.Model'
-
-	,fields: [{
+	,fields: [
+	{
 		 name: 'id'
 		,type: 'string'
 	},{
