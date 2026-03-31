@@ -1,6 +1,7 @@
 'use strict';
 
-const { app, protocol, BrowserWindow, dialog, shell, Menu, ipcMain, nativeImage, session } = require('electron');
+const { app, protocol, BrowserWindow, dialog, shell, Menu, ipcMain, nativeImage, nativeTheme, session } = require('electron');
+
 // Tray
 const tray = require('./tray');
 // AutoLaunch
@@ -10,9 +11,10 @@ const Config = require('electron-store');
 // Updater
 const updater = require('./updater');
 // File System
-const fs = require("fs");
+const fs = require('fs');
 const path = require('path');
-const contextMenu = require('electron-context-menu');
+// Context menu
+let contextMenu;
 
 // If 'data' folder exists in Hamsket's folder, set userdata, logs, and usercache path to there
 var basepath = app.getAppPath();
@@ -37,6 +39,7 @@ const config = new Config({
 		,master_password: false
 		,dont_disturb: false
 		,disable_gpu: false
+		,ignore_gpu_blacklist: true
 		,proxy: false
 		,proxyHost: ''
 		,proxyPort: ''
@@ -61,38 +64,31 @@ if (config.get('enable_hidpi_support') && (process.platform === 'win32')) {
 	app.commandLine.appendSwitch('force-device-scale-factor', '1');
 }
 
-// Temporary fix to load Twitter and other websites inside WebViews
-// Bug related with Electron: https://github.com/electron/electron/issues/25469
-app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy');
+// Ignore GPU blacklist
+if ( config.get('ignore_gpu_blacklist') )
+	app.commandLine.appendSwitch('ignore-gpu-blacklist');
 
 // This must match the package name in package.json
 app.setAppUserModelId('com.thegoddessinari.hamsket');
 
-app.userAgentFallback = app.userAgentFallback
-	.replace(`Electron/${process.versions.electron}`, ``)
-	.replace(`Hamsket/${app.getVersion()}`, ``);
+app.userAgentFallback = app.userAgentFallback.replace(`Electron/${process.versions.electron}`, ``).replace(`Hamsket/${app.getVersion()}`, ``);
 
 // Menu
 const appMenu = require('./menu')(config);
 
 // Configure AutoLaunch
-const appLauncher = new AutoLaunch({
-	name: 'Hamsket',
-	isHidden: config.get('start_minimized')
-});
-appLauncher
-	.isEnabled()
-	.then((isEnabled) => {
-		if (config.get('auto_launch') && !isEnabled) {
-			appLauncher.enable();
-		} else if (!config.get('auto_launch') && isEnabled) {
-			appLauncher.disable();
-		}
-		return;
-	})
-	.catch((err) => {
-		console.log(err);
-	});
+const appLauncher = new AutoLaunch({ name: 'Hamsket', isHidden: config.get('start_minimized') });
+appLauncher.isEnabled().then((isEnabled) => {
+	if (config.get('auto_launch') && !isEnabled) {
+		appLauncher.enable();
+	} else if (!config.get('auto_launch') && isEnabled) {
+		appLauncher.disable();
+	}
+	return;
+}).catch((err) => { console.log(err); });
+
+// Set native theme properties
+nativeTheme.themeSource = 'system';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -104,7 +100,7 @@ function createWindow () {
 	mainWindow = new BrowserWindow({
 		 title: 'Hamsket'
 		,icon: nativeImage.createFromPath(path.join(app.getAppPath(), '/resources/Icon.' + (process.platform === 'linux' ? 'png' : 'ico')))
-		,backgroundColor: '#FFF'
+		,backgroundColor: nativeTheme.shouldUseDarkColors? '#000' : '#FFF'
 		,x: config.get('x')
 		,y: config.get('y')
 		,width: config.get('width')
@@ -116,11 +112,11 @@ function createWindow () {
 		,acceptFirstMouse: true
 		,webPreferences: {
 			partition: 'persist:hamsket',
+			contextIsolation: false,
+			sandbox: false,
 			nodeIntegration: true,
 			webviewTag: true,
-			enableRemoteModule: true,
-			contextIsolation: false,
-			spellcheck: false
+			spellcheck: false,
 		}
 	});
 
@@ -131,16 +127,10 @@ function createWindow () {
 		mainWindow.maximize();
 
 	if ( config.get('start_minimized') ) {
-		if ( config.get('window_display_behavior') == 'show_taskbar' ) {
-			mainWindow.webContents.once('did-finish-load', function(e) {
-				mainWindow.minimize();
-			});
-		}
-		else {
-			mainWindow.webContents.once('did-finish-load', function(e) {
-				mainWindow.hide();
-			});
-		}
+		if (config.get('window_display_behavior') == 'show_taskbar')
+			mainWindow.webContents.once('did-finish-load', (e) => { mainWindow.minimize(); })
+		else
+			mainWindow.webContents.once('did-finish-load', (e) => { mainWindow.hide(); });
 	}
 
 	// Check if the window its outside of the view (ex: multi monitor setup)
@@ -154,7 +144,7 @@ function createWindow () {
 
 	process.setMaxListeners(10000);
 
-	// and load the index.html of the app.
+	// and load the index.html of the app
 	mainWindow.loadURL('file://' + __dirname + '/../index.html');
 
 	Menu.setApplicationMenu(appMenu);
@@ -165,33 +155,11 @@ function createWindow () {
 		updater.initialize(mainWindow);
 
 	// Open links in default browser
-	/*mainWindow.webContents.on('new-window', function(e, url, frameName, disposition, options) {
-		const protocol = require('url').parse(url).protocol;
-		switch ( disposition ) {
-			case 'new-window': {
-				e.preventDefault();
-				const win = new BrowserWindow(options);
-				win.once('ready-to-show', () => win.show());
-				win.loadURL(url);
-				e.newGuest = win;
-				break;
-			}
-			case 'foreground-tab': {
-				if (protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:' || protocol === 'zoom:' || protocol === 'slack:' || protocol === 'skype:' || protocol === 'teams:') {
-					e.preventDefault();
-					shell.openExternal(url);
-				}
-				break;
-			}
-			default:
-				break;
-		}
-	});*/
 	mainWindow.webContents.setWindowOpenHandler((details) => {
 		const { URL } = require('url');
 		const url = new URL(details.url);
 		const protocol = url.protocol;
-		switch ( details.disposition ) {
+		switch (details.disposition) {
 			case 'new-window': {
 				return {
 					action: 'allow',
@@ -201,52 +169,45 @@ function createWindow () {
 				};
 			}
 			case 'foreground-tab': {
-				if (protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:' || protocol === 'zoom:' || protocol === 'slack:' || protocol === 'skype:' || protocol === 'teams:')
+				if (protocol === 'file:' || protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:' || protocol === 'zoom:' || protocol === 'slack:' || protocol === 'skype:' || protocol === 'teams:') {
 					shell.openExternal(url.href);
+					return { action: 'allow' };
+				}
+
+				console.log("Blocked by 'setWindowOpenHandler': " + url.href);
 				return { action: 'deny' };
 			}
-			default:
+			default: {
+				console.log("Blocked by 'setWindowOpenHandler': " + url.href);
 				return { action: 'deny' };
+			}
 		}
 	});
 
 	mainWindow.webContents.on('did-create-window', (childWindow, { url, frameName, options, disposition }) => {
   		const win = childWindow;
-  		win.once('ready-to-show', () => win.show());
+  		win.once('ready-to-show', () => { win.show(); });
   		win.loadURL(url);
 	});
-
-	mainWindow.webContents.on('will-navigate', function(event, url) {
-		event.preventDefault();
-	});
+	mainWindow.webContents.on('will-navigate', (event, url) => { event.preventDefault(); });
 
 	// BrowserWindow events
-	mainWindow.on('page-title-updated', (e, title) => updateBadge(title));
-	mainWindow.on('maximize', function(e) {
-		config.set('maximized', true);
-	});
-	mainWindow.on('unmaximize', function(e) {
-		config.set('maximized', false);
-	});
-	mainWindow.on('resize', function(e) {
-		if (!mainWindow.isMaximized())
-			config.set(mainWindow.getBounds());
-	});
-	mainWindow.on('move', function(e) {
-		if (!mainWindow.isMaximized())
-			config.set(mainWindow.getBounds());
-	});
+	mainWindow.on('page-title-updated', (e, title) => { updateBadge(title); });
+	mainWindow.on('maximize', (e) => { config.set('maximized', true); });
+	mainWindow.on('unmaximize', (e) => { config.set('maximized', false); });
+	mainWindow.on('resize', (e) => { if (!mainWindow.isMaximized()) config.set(mainWindow.getBounds()); });
+	mainWindow.on('move', (e) => { if (!mainWindow.isMaximized()) config.set(mainWindow.getBounds()); });
 	mainWindow.on('app-command', (e, cmd) => {
 		// Navigate the window back when the user hits their mouse back button
 		if ( cmd === 'browser-backward' )
-			mainWindow.webContents.executeJavaScript('if(Ext.cq1("app-main")) Ext.cq1("app-main").getActiveTab().goBack();');
+			mainWindow.webContents.executeJavaScript('if(Ext.cq1("app-main")) { Ext.cq1("app-main").getActiveTab().goBack(); }');
 		// Navigate the window forward when the user hits their mouse forward button
 		if ( cmd === 'browser-forward' )
-			mainWindow.webContents.executeJavaScript('if(Ext.cq1("app-main")) Ext.cq1("app-main").getActiveTab().goForward();');
+			mainWindow.webContents.executeJavaScript('if(Ext.cq1("app-main")) { Ext.cq1("app-main").getActiveTab().goForward(); }');
 	});
 
 	// Emitted when the window is closed
-	mainWindow.on('close', function(e) {
+	mainWindow.on('close', (e) => {
 		if ( !isQuitting ) {
 			e.preventDefault();
 
@@ -271,11 +232,8 @@ function createWindow () {
 		}
 	});
 
-	mainWindow.on('closed', function(e) {
-		mainWindow = null;
-	});
-
-	mainWindow.once('focus', () => mainWindow.flashFrame(false));
+	mainWindow.on('closed', (e) => { mainWindow = null; });
+	mainWindow.once('focus', () => { mainWindow.flashFrame(false); });
 }
 
 let mainMasterPasswordWindow;
@@ -287,14 +245,10 @@ function createMasterPasswordWindow() {
 			nodeIntegration: true,
 			contextIsolation: false,
 		}
-
 	});
 	require("@electron/remote/main").enable(mainMasterPasswordWindow.webContents);
-
 	mainMasterPasswordWindow.loadURL('file://' + __dirname + '/../masterpassword.html');
-	mainMasterPasswordWindow.on('close', function() {
-		mainMasterPasswordWindow = null;
-	});
+	mainMasterPasswordWindow.on('close', () => { mainMasterPasswordWindow = null; });
 }
 
 function updateBadge(title) {
@@ -314,7 +268,8 @@ function updateBadge(title) {
 
 		mainWindow.webContents.send('setBadge', messageCount);
 	// MacOS & Linux
-	} else {
+	}
+	else {
 		app.badgeCount = messageCount;
 	}
 
@@ -322,16 +277,16 @@ function updateBadge(title) {
 		mainWindow.flashFrame(true);
 }
 
-ipcMain.on('setBadge', function(event, messageCount, value) {
+ipcMain.on('setBadge', (event, messageCount, value) => {
 	const img = nativeImage.createFromDataURL(value);
 	mainWindow.setOverlayIcon(img, messageCount.toString());
 });
 
-ipcMain.on('getConfig', function(event, arg) {
+ipcMain.on('getConfig', (event, arg) => {
 	event.returnValue = config.store;
 });
 
-ipcMain.on('setConfig', function(event, values) {
+ipcMain.on('setConfig', (event, values) => {
 	config.set(values);
 
 	// hide_menu_bar
@@ -341,15 +296,15 @@ ipcMain.on('setConfig', function(event, values) {
 	// always_on_top
 	mainWindow.setAlwaysOnTop(values.always_on_top);
 	// auto_launch
-	if (values.auto_launch) {
+	if (values.auto_launch)
 		appLauncher.enable();
-	} else {
+	else
 		appLauncher.disable();
-	}
+
 	// systemtray_indicator
 	updateBadge(mainWindow.getTitle());
 
-	mainWindow.webContents.executeJavaScript('(function(a){if(a)a.controller.initialize(a)})(Ext.cq1("app-main"))');
+	mainWindow.webContents.executeJavaScript('(function(a) { if(a) a.controller.initialize(a); })(Ext.cq1("app-main"))');
 
 	switch ( values.window_display_behavior ) {
 		case 'show_taskbar':
@@ -369,7 +324,7 @@ ipcMain.on('setConfig', function(event, values) {
 	}
 });
 
-ipcMain.on('validateMasterPassword', function(event, pass) {
+ipcMain.on('validateMasterPassword', (event, pass) => {
 	if ( config.get('master_password') === require('crypto').createHash('md5').update(pass).digest('hex') ) {
 		createWindow();
 		mainMasterPasswordWindow.close();
@@ -379,9 +334,9 @@ ipcMain.on('validateMasterPassword', function(event, pass) {
 });
 
 // Handle Service Notifications
-ipcMain.on('setServiceNotifications', function(event, partition, op) {
+ipcMain.on('setServiceNotifications', (event, partition, op) => {
 	if (partition) {
-		session.fromPartition(partition).setPermissionRequestHandler(function(webContents, permission, callback) {
+		session.fromPartition(partition).setPermissionRequestHandler((webContents, permission, callback) => {
 			if (permission === 'notifications')
 				return callback(op);
 			callback(true);
@@ -389,17 +344,17 @@ ipcMain.on('setServiceNotifications', function(event, partition, op) {
 	}
 });
 
-ipcMain.on('setDontDisturb', function(event, arg) {
+ipcMain.on('setDontDisturb', (event, arg) => {
 	config.set('dont_disturb', arg);
 });
 
 // Reload app
-ipcMain.on('reloadApp', function(event) {
+ipcMain.on('reloadApp', (event) => {
 	mainWindow.reload();
 });
 
 // Relaunch app
-ipcMain.on('relaunchApp', function(event) {
+ipcMain.on('relaunchApp', (event) => {
 	app.relaunch();
 	app.quit(0);
 });
@@ -441,7 +396,8 @@ let allowPopUp = [
 	'figma.com/start_google_sso',
 	'mail.google.com/mail',
 	'account.protonmail.com/authorize?',
-	'account.protonmail.me/authorize?',
+	'account.proton.me/authorize?',
+	'account-api.proton.me',
 	'app.slack.com/free-willy/',
 	'messenger.com/videocall',
 	'api.moo.do',
@@ -519,51 +475,57 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 				// if it is not, we send this to the app
 				let allow = false;
 				allowPopUp.forEach(allowed => details.url.indexOf(allowed) > -1 && (allow = true));
-				if (allow)
+				if (allow) {
+					shell.openExternal(details.url);
 					return { action: 'allow' };
-				shell.openExternal(details.url);
+				}
 
+				console.log("Blocked by 'setWindowOpenHandler': " + details.url);
 				return { action: 'deny' };
 			}
-			default:
+			default: {
+				console.log("Blocked by 'setWindowOpenHandler': " + details.url);
 				return { action: 'deny' };
+			}
 		}
 	});
 
+	// Open links in default browser
 	contents.on('did-create-window', (win, details) => {
-		// Here we center the new window
 		win.center();
-		// The following code is for handling the about:blank cases only
-		if (!['about:blank', 'about:blank#blocked'].includes(details.url))
-			return;
-		let once = false;
-		win.webContents.on('will-navigate', (e, nextURL) => {
-			if (once)
-				return;
-			if (['about:blank', 'about:blank#blocked'].includes(nextURL))
-				return;
-			once = true;
-			let allow = false;
-			allowPopUp.forEach(url => nextURL.indexOf(url) > -1 && (allow = true));
-			// If the url is in aboutBlankOnlyWindow, we handle this as a popup window
-			if (allow)
-				return win.show();
-			shell.openExternal(url);
-			win.close();
-		});
+		const { URL } = require('url');
+		const url = new URL(details.url);
+		const protocol = url.protocol;
+		switch (details.disposition) {
+			case 'new-window': {
+				const win = new BrowserWindow(options);
+				win.once('ready-to-show', () => win.show());
+				win.loadURL(url.href);
+				break;
+			}
+			case 'foreground-tab': {
+				if (protocol === 'file:' || protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:' || protocol === 'zoom:' || protocol === 'slack:' || protocol === 'skype:' || protocol === 'teams:') {
+					shell.openExternal(url.href);
+					win.close();
+				}
+				break;
+			}
+			default:
+				break;
+		}
 	});
 });
 
 // Code for downloading images as temporary files
 // Credit: Ghetto Skype (https://github.com/stanfieldr/ghetto-skype)
 let imageCache = {};
-ipcMain.on('image:download', function(event, url, partition) {
+ipcMain.on('image:download', (event, url, partition) => {
 	const tmp = require('tmp');
 	const mime = require('mime');
 	let file = imageCache[`${url}`];
 	if (file) {
 		if (file.complete) {
-			shell.openItem(file.path);
+			shell.openPath(file.path);
 		}
 
 		// Pending downloads intentionally do not proceed
@@ -587,7 +549,7 @@ ipcMain.on('image:download', function(event, url, partition) {
 		downloadItem.once('done', () => {
 			tmpWindow.destroy();
 			tmpWindow = null;
-			shell.openItem(file.path);
+			shell.openPath(file.path);
 			file.complete = true;
 		});
 	});
@@ -596,13 +558,13 @@ ipcMain.on('image:download', function(event, url, partition) {
 });
 
 // Hangouts
-ipcMain.on('image:popup', function(event, url, partition) {
+ipcMain.on('image:popup', (event, url, partition) => {
 	let tmpWindow = new BrowserWindow({
 		 width: mainWindow.getBounds().width
 		,height: mainWindow.getBounds().height
 		,parent: mainWindow
 		,icon: nativeImage.createFromPath(path.join(app.getAppPath(), '/resources/Icon.' + (process.platform === 'linux' ? 'png' : 'ico')))
-		,backgroundColor: '#FFF'
+		,backgroundColor: nativeTheme.shouldUseDarkColors ? '#000' : '#FFF'
 		,autoHideMenuBar: true
 		,skipTaskbar: true
 		,webPreferences: {
@@ -614,24 +576,22 @@ ipcMain.on('image:popup', function(event, url, partition) {
 	tmpWindow.loadURL(url);
 });
 
-ipcMain.on('toggleWin', function(event, alwaysShow) {
+ipcMain.on('toggleWin', (event, alwaysShow) => {
 	if ( !mainWindow.isMinimized() && mainWindow.isMaximized() && mainWindow.isVisible() ) {
 		// Maximized
-		if (!alwaysShow) {
+		if (alwaysShow)
+			mainWindow.show()
+		else
 			mainWindow.close();
-		} else {
-			mainWindow.show();
-		}
 	} else if ( mainWindow.isMinimized() && !mainWindow.isMaximized() && !mainWindow.isVisible() ) {
 		// Minimized
 		mainWindow.restore();
 	} else if ( !mainWindow.isMinimized() && !mainWindow.isMaximized() && mainWindow.isVisible() ) {
 		// Windowed mode
-		if (!alwaysShow) {
-			mainWindow.close();
-		 } else {
+		if (alwaysShow)
 			mainWindow.show();
-		 }
+		else
+			mainWindow.close();
 	} else if ( mainWindow.isMinimized() && !mainWindow.isMaximized() && mainWindow.isVisible() ) {
 		// Closed to taskbar
 		mainWindow.restore();
@@ -669,7 +629,10 @@ if ( config.get('disable_gpu') )
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
-app.on('ready', function() {
+app.on('ready', async () => {
+	const contextMenuModule = await import('electron-context-menu');
+	contextMenu = contextMenuModule.default;
+
 	require('@electron/remote/main').initialize();
 	if (config.get('master_password')) {
 		createMasterPasswordWindow();
@@ -679,7 +642,7 @@ app.on('ready', function() {
 });
 
 // Quit when all windows are closed.
-app.on('window-all-closed', function () {
+app.on('window-all-closed', () => {
 	// On OS X it is common for applications and their menu bar
 	// to stay active until the user quits explicitly with Cmd + Q
 	if (process.platform !== 'darwin') {
@@ -689,7 +652,7 @@ app.on('window-all-closed', function () {
 
 // Only MacOS: On OS X it's common to re-create a window in the app when the
 // dock icon is clicked and there are no other windows open.
-app.on('activate', function () {
+app.on('activate', () => {
 	if (mainWindow === null && mainMasterPasswordWindow === null ) {
 		if (config.get('master_password')) {
 			createMasterPasswordWindow();
@@ -702,44 +665,40 @@ app.on('activate', function () {
 		mainWindow.show();
 });
 
-app.on('before-quit', function () {
+app.on('before-quit', () => {
 	isQuitting = true;
 });
 
 // Prevent the ability to create WebView with nodeIntegration.
 app.on('web-contents-created', (event, contents) => {
 	require("@electron/remote/main").enable(contents);
+
 	const contextMenuWebContentsDispose = contextMenu({
 		window: contents,
 		showCopyImageAddress: true,
 		showSaveImage: false,
 		showSaveImageAs: true,
+		showSelectAll: false
 	});
 
-	contents.session.webRequest.onBeforeSendHeaders(
-		{
-			urls: [
-				'https://accounts.google.com/',
-				'https://accounts.google.com/*'
-			]
-		},
-		(details, callback) => {
-			details.requestHeaders['User-Agent'] =
-				'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0';
-			callback({ requestHeaders: details.requestHeaders });
-		}
-	);
+	contents.session.webRequest.onBeforeSendHeaders({
+		urls: [
+			'https://accounts.google.com/',
+			'https://accounts.google.com/*'
+		]
+	}, (details, callback) => {
+		details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0';
+		callback({ requestHeaders: details.requestHeaders });
+	});
 
-    contents.on('will-attach-webview', (event, webPreferences, params) => {
+    contents.on('will-attach-webview', (event, webPreferences) => {
 		// Always prevent node integration
 		webPreferences.nodeIntegration = false;
 		//webPreferences.nodeIntegrationInSubFrames = false;
 		//webPreferences.nodeIntegrationInWorker = false;
-
-		// Always disable context isolation
-		//webPreferences.contextIsolation = false;
 	});
-	contents.on('destroyed', function() {
+
+	contents.on('destroyed', () => {
 		contextMenuWebContentsDispose();
-	})
+	});
 });

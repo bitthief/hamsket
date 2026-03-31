@@ -8,20 +8,14 @@ Ext.define('Hamsket.view.main.Main', {
 		,'Hamsket.view.add.Add'
 		,'Ext.ux.TabReorderer'
 	]
-
 	,xtype: 'app-main'
-
 	,controller: 'main'
-	,viewModel: {
-		type: 'main'
-	}
-
+	,viewModel: 'main'
 	,plugins: [
 		{
 			 ptype: 'tabreorderer'
 		}
 	]
-
 	,autoRender: true
 	,autoShow: true
 	,deferredRender: false
@@ -29,7 +23,7 @@ Ext.define('Hamsket.view.main.Main', {
 		items: [
 			{
 				 xtype: 'button'
-				,html: '<span class="fa fa-user-plus" style="color:red;font-size:16px;cursor:pointer;padding:0 5px;"></span>'
+				,html: '<span class="x-fas fa-user-plus" style="color:red;font-size:16px;cursor:pointer;padding:0 5px;"></span>'
 				,baseCls: ''
 				,tooltip: 'Sponsor'
 				,href: 'https://github.com/sponsors/TheGoddessInari/'
@@ -44,7 +38,8 @@ Ext.define('Hamsket.view.main.Main', {
 			,reorderable: false
 			,autoScroll: true
 			,layout: 'hbox'
-			,tabConfig: {} // Created empty for Keyboard Shortcuts
+			 // Created empty for Keyboard Shortcuts
+			,tabConfig: {}
 			,items: [
 				{
 					 xtype: 'panel'
@@ -144,7 +139,7 @@ Ext.define('Hamsket.view.main.Main', {
 					,tools: [
 						{
 							 xtype: 'button'
-							,glyph: 'XF1F8@FontAwesome'
+							,glyph: 0xF1F8
 							,baseCls: ''
 							,tooltip: locale['app.main[10]']
 							,handler: 'removeAllServices'
@@ -153,7 +148,7 @@ Ext.define('Hamsket.view.main.Main', {
 					,columns: [
 						{
 							 xtype: 'templatecolumn'
-							,width: 50
+							,width: 40
 							,variableRowHeight: true
 							,tpl: `<img src='{[ values.type !== "custom" ? "resources/icons/"+values.logo : (values.logo == "" ? "resources/icons/custom.png" : values.logo) ]}' data-qtip='{type:capitalize}' width='32' style='{[ values.enabled ? "-webkit-filter: grayscale(0)" : "-webkit-filter: grayscale(1)" ]}' />`
 						}
@@ -169,41 +164,47 @@ Ext.define('Hamsket.view.main.Main', {
 						}
 						,{
 							 xtype: 'actioncolumn'
-							,width: 60
+							,width: 46
 							,align: 'right'
 							,items: [
 								{
-									 glyph: 0xF1F7
+									 glyph: 0xF1F6
 									,tooltip: locale['app.main[11]']
-									,getClass( value, metaData, record, rowIndex, colIndex, store, view ){
-										if ( record.get('notifications') ) return 'x-hidden';
+									,getClass: function( value, metaData, record, rowIndex, colIndex, store, view ) {
+										if ( record.get('notifications') )
+											return 'x-hidden';
 									}
 								}
 								,{
 									 glyph: 0xF026
 									,tooltip: locale['app.main[12]']
-									,getClass( value, metaData, record, rowIndex, colIndex, store, view ){
-										if ( !record.get('muted') ) return 'x-hidden';
+									,getClass: function( value, metaData, record, rowIndex, colIndex, store, view ) {
+										if ( !record.get('muted') )
+											return 'x-hidden';
 									}
 								}
 							]
 						}
 						,{
 							 xtype: 'actioncolumn'
-							,width: 60
+							,width: 46
 							,align: 'center'
 							,items: [
 								{
 									 glyph: 0xF013
 									,tooltip: locale['app.main[13]']
 									,handler: 'configureService'
-									,getClass(){ return 'x-hidden-display'; }
+									,getClass: function() {
+										return 'x-hidden-display';
+									}
 								}
 								,{
 									 glyph: 0xF1F8
 									,tooltip: locale['app.main[14]']
 									,handler: 'removeService'
-									,getClass(){ return 'x-hidden-display'; }
+									,getClass: function() {
+										return 'x-hidden-display';
+									}
 								}
 							]
 						}
@@ -211,7 +212,7 @@ Ext.define('Hamsket.view.main.Main', {
 							 xtype: 'checkcolumn'
 							,width: 40
 							,dataIndex: 'enabled'
-							,renderer(value, metaData) {
+							,renderer: function(value, metaData) {
 								metaData.tdAttr = 'data-qtip="Service '+(value ? 'Enabled' : 'Disabled')+'"';
 								return this.defaultRenderer(value, metaData);
 							}
@@ -233,13 +234,13 @@ Ext.define('Hamsket.view.main.Main', {
 			]
 			,tbar: {
 				 xtype: 'toolbar'
-				,height: 42
+				,height: 45
 				,ui: 'main'
 				,enableOverflow: true
 				,overflowHandler: 'menu'
 				,items: [
 					{
-						 glyph: 'XF1F7@FontAwesome'
+						 glyph: 0xF1F6
 						,text: locale['app.main[16]']+': '+(JSON.parse(localStorage.getItem('dontDisturb')) ? locale['app.window[20]'] : locale['app.window[21]'])
 						,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+': Alt+F1</b>'
 						,enableToggle: true
@@ -249,7 +250,7 @@ Ext.define('Hamsket.view.main.Main', {
 						,pressed: JSON.parse(localStorage.getItem('dontDisturb'))
 					}
 					,{
-						 glyph: 'XF023@FontAwesome'
+						 glyph: 0xF023
 						,text: locale['app.main[19]']
 						,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+': Alt+F2</b>'
 						,handler: 'lockHamsket'
@@ -258,7 +259,7 @@ Ext.define('Hamsket.view.main.Main', {
 					,'->'
 					,{
 						 text: 'Backup'
-						,glyph: 'XF0C7@FontAwesome'
+						,glyph: 0xF0C7
 						,id: 'backupBtn'
 						,tooltip: 'Backup services to disk'
 						,scope: Hamsket.ux.FileBackup
@@ -266,15 +267,15 @@ Ext.define('Hamsket.view.main.Main', {
 					}
 					,{
 						text: 'Restore'
-					   ,glyph: 'XF115@FontAwesome'
+					   ,glyph: 0xF07C
 					   ,id: 'restoreBtn'
 					   ,tooltip: 'Restore services from disk'
 					   ,scope: Hamsket.ux.FileBackup
 					   ,handler: Hamsket.ux.FileBackup.restoreConfiguration
-				   }
-				   ,{
+				    }
+				    ,{
 						 tooltip: locale['preferences[0]']
-						,glyph: 'XF013@FontAwesome'
+						,glyph: 0xF013
 						,handler: 'openPreferences'
 					}
 				]
@@ -290,7 +291,7 @@ Ext.define('Hamsket.view.main.Main', {
 						}
 						,{
 							 text: 'Sponsor'
-							,glyph: 'XF234@FontAwesome'
+							,glyph: 0xF234
 							,href: 'https://github.com/sponsors/TheGoddessInari'
 						}
 					]
@@ -305,7 +306,7 @@ Ext.define('Hamsket.view.main.Main', {
 				,'->'
 				,{
 					 xtype: 'label'
-					,html: '<span class="fa fa-code-fork" style="color:black;"></span> ' + locale['app.main[26]'] + ' <span class="fa fa-meh-o" style="color:red;"></span> '+locale['app.main[27]'].replace('USA', '<img src="resources/flag.png" alt="United States" data-qtip="United States" />')
+					,html: '<span class="x-fas fa-code-branch" style="color:black;"></span> ' + locale['app.main[26]'] + ' <span class="x-fas fa-meh" style="color:red;"></span> '+locale['app.main[27]'].replace('USA', '<img src="resources/flag.png" alt="United States" data-qtip="United States" />')
 				}
 				,'->'
 				,{
@@ -317,29 +318,34 @@ Ext.define('Hamsket.view.main.Main', {
 							,pressed: true
 						}
 						,{
-							 glyph: 'XF082@FontAwesome'
+							 iconCls: 'x-fab fa-facebook'
 							,href: 'https://www.facebook.com/TheGoddessInari'
 						}
 						,{
-							 glyph: 'XF099@FontAwesome'
+							 iconCls: 'x-fab fa-twitter'
 							,href: 'https://www.twitter.com/TheGoddessInari'
 						}
 						,{
-							 glyph: 'XF09B@FontAwesome'
+							 iconCls: 'x-fab fa-github'
 							,href: 'https://www.github.com/TheGoddessInari/hamsket'
 						}
 					]
 				}
 			]
 		}
-		,{ id: 'tbfill', tabConfig : { xtype : 'tbfill' } }
+		,{
+			id: 'tbfill',
+			tabConfig : {
+				xtype : 'tbfill'
+			}
+		}
 	]
-
 	,listeners: {
 		 tabchange: 'onTabChange'
 		,add: 'updatePositions'
 		,remove: 'updatePositions'
 		,childmove: 'updatePositions'
+		,beforerender: 'onBeforeRender'
 		,boxready: 'initialize'
 	}
 });

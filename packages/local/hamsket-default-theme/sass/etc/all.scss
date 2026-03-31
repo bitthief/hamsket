@@ -1,20 +1,16 @@
-@import url(../resources/fonts/font-awesome/css/font-awesome.min.css);
-@import url(https://fonts.googleapis.com/css?family=Josefin+Sans:400,700,600);
-@import url(https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,700italic,700,500italic,500,400italic);
-@import 'loadscreen';
+//@include google-webfont($font-name: Josefin+Sans, $font-weights: 400 700 600);
+//@include google-webfont($font-name: Roboto, $font-weights: 400 100 100italic 300 300italic 700italic 700 500italic 500 400italic);
+@import url('https://fonts.googleapis.com/css?family=Josefin+Sans:400,700,600');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,700italic,700,500italic,500,400italic');
 
-$base-color: #2E658E;
-$font-family: 'Roboto', sans-serif;
-$include-ie: false;
-$include-ff: false;
-$include-safari: false;
-$include-opera: false;
+@import 'loadscreen';
 
 // Spinner
 body {
 	margin: 0;
 	background-color: $base-color;
 }
+
 @-webkit-keyframes uil-ring-anim {
 	0% {
 		-ms-transform: rotate(0deg);
@@ -144,7 +140,7 @@ body {
 	}
 }
 .uil-ring-css {
-	background: url('../resources/Icon.png') no-repeat center center;
+	background: url(get-resource-path('./Icon.png')) no-repeat center center;
 	background-size: 160px 160px;
 	position: absolute;
 	width: 200px;
@@ -222,9 +218,19 @@ body {
 }
 
 // Allow Glyphs in Action Columns
-.x-action-col-glyph {font-size:16px; line-height:16px; color:#CFCFCF; width:16px; margin: 0 5px;}
-.x-action-col-glyph:hover{color:$base-color}
-.x-grid-item-over .x-hidden-display, .x-grid-item-selected .x-hidden-display{display:inline-block !important}
+.x-action-col-glyph {
+	font-size: 16px;
+	line-height: 16px;
+	color: #CFCFCF;
+	width: 16px;
+	margin: 0 5px;
+}
+.x-action-col-glyph:hover {
+	color: $base-color
+}
+.x-grid-item-over .x-hidden-display, .x-grid-item-selected .x-hidden-display {
+	display: inline-block !important
+}
 .x-grid-cell-inner {
 	height: 44px;
 	line-height: 32px !important;
@@ -232,8 +238,12 @@ body {
 		line-height: 44px !important;
 	}
 }
-.x-tab-icon-el-default { background-size: 24px; }
-.x-title-icon { background-size: 16px; }
+.x-tab-icon-el-default {
+	background-size: 24px;
+}
+.x-title-icon {
+	background-size: 16px;
+}
 
 // Fix for scroller tab bar
 //.x-box-scroller-body-horizontal { width: auto !important; margin-right: 18px; padding-right: 18px; }
@@ -250,15 +260,14 @@ body {
 	span {
 		margin-left: 10px;
 		line-height: 48px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: block;
 	}
 	&:hover {
 		background-color: lighten($base-color, 55%);
 	}
-}
-
-// Auth0
-.auth0-lock.auth0-lock .auth0-lock-header-logo {
-	height: 50px !important;
 }
 
 .x-statusbar {
@@ -271,4 +280,9 @@ body {
 	.x-toolbar-text-default {
 		color: #FFF !important;
 	}
+}
+
+// Auth0
+.auth0-lock.auth0-lock .auth0-lock-header-logo {
+	height: 50px !important;
 }

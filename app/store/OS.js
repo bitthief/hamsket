@@ -1,10 +1,10 @@
 Ext.define('Hamsket.store.OS', {
     extend: 'Ext.data.Store'
    ,alias: 'store.os'
-
+   ,storeId: 'OS'
    ,fields: ['platform', 'label']
    ,data: [
-        {  'platform': '',         'label': '(none)'}
+         {  'platform': '',         'label': '(none)'}
         ,{ 'platform': 'win32',    'label': 'Windows'}
         ,{ 'platform': 'linux',    'label': 'Linux'}
         ,{ 'platform': 'darwin',   'label': 'MacOS'}

@@ -1,7 +1,9 @@
 const { app, autoUpdater, ipcMain } = require('electron');
+
 const version = app.getVersion();
 const platform = process.platform === 'darwin' ? 'osx' : process.platform;
-const url = `https://gethamsket.herokuapp.com/update/${platform}/${version}`;
+
+const url = `https://forcent.io/download/hamsket/update/${platform}/${version}`;
 
 const initialize = (window) => {
 	const webContents = window.webContents;

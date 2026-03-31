@@ -1,21 +1,17 @@
 Ext.define('Hamsket.view.add.Add',{
 	 extend: 'Ext.window.Window'
-
 	,requires: [
 		 'Hamsket.view.add.AddController'
 		,'Hamsket.view.add.AddModel'
 	]
-
 	,controller: 'add-add'
 	,viewModel: {
 		type: 'add-add'
 	}
-
 	// private
 	,record: null
 	,service: null
 	,edit: false
-
 	// defaults
 	,modal: true
 	,width: 500
@@ -24,8 +20,7 @@ Ext.define('Hamsket.view.add.Add',{
 	,draggable: false
 	,bodyPadding: 10
 	,defaultAlign: 't-t'
-
-	,initComponent() {
+	,initComponent: function() {
 		const me = this;
 
 		me.title = `${(!me.edit ? locale['app.window[0]'] : locale['app.window[1]'])} ${Ext.String.htmlEncode(me.record.get('name'))}`;
@@ -41,7 +36,9 @@ Ext.define('Hamsket.view.add.Add',{
 						,value: me.record.get('type') === 'custom' ? (me.edit ? Ext.String.htmlEncode(me.record.get('name')) : '') : Ext.String.htmlEncode(me.record.get('name'))
 						,name: 'serviceName'
 						,allowBlank: true
-						,listeners: { specialkey: 'onEnter' }
+						,listeners: {
+							specialkey: 'onEnter'
+						}
 					}
 					,{
 						 xtype: 'container'
@@ -68,7 +65,9 @@ Ext.define('Hamsket.view.add.Add',{
 								,submitEmptyText: false
 								,emptyText: me.record.get('url') === '___' ? 'https://' : ''
 								,vtype: me.record.get('url') === '___' ? 'url' : ''
-								,listeners: { specialkey: 'onEnter' }
+								,listeners: {
+									specialkey: 'onEnter'
+								}
 								,flex: 1
 							}
 							,{
@@ -93,10 +92,11 @@ Ext.define('Hamsket.view.add.Add',{
 									]
 								}
 								// Fixes bug EXTJS-20094 for version Ext JS 5
-								,arrowHandler(cycleBtn, e) {
-									if ( !cycleBtn.arrowVisible ) cycleBtn.hideMenu();
+								,arrowHandler: function(cycleBtn, e) {
+									if ( !cycleBtn.arrowVisible )
+										cycleBtn.hideMenu();
 								}
-								,changeHandler(cycleBtn, activeItem) {
+								,changeHandler: function(cycleBtn, activeItem) {
 									Ext.apply(cycleBtn.previousSibling(), {
 										 emptyText: activeItem.custom ? 'https://' : ' '
 										,vtype: activeItem.custom ? 'url' : ''
@@ -125,7 +125,6 @@ Ext.define('Hamsket.view.add.Add',{
 									}
 
 									cycleBtn.previousSibling().previousSibling().setHidden(activeItem.custom ? true : me.edit ? me.service.get('url').indexOf('___') === -1 ? true : me.service.get('type') === 'custom' || me.service.get('url') === '___' : me.record.get('url').indexOf('___') === -1 ? true : me.record.get('type') === 'custom' || me.record.get('url') === '___');
-
 									cycleBtn.previousSibling().setReadOnly( activeItem.custom ? false : (me.edit ? me.service.get('url').indexOf('___') === -1 : me.record.get('url').indexOf('___') === -1) );
 									cycleBtn.nextSibling().setValue( activeItem.custom ? 2 : 1 );
 								}
@@ -148,7 +147,9 @@ Ext.define('Hamsket.view.add.Add',{
 						,hidden: me.record.get('type') !== 'custom'
 						,labelWidth: 40
 						,margin: '5 0 0 0'
-						,listeners: { specialkey: 'onEnter' }
+						,listeners: {
+							specialkey: 'onEnter'
+						}
 					}
 					,{
 						 xtype: 'fieldset'
@@ -320,12 +321,8 @@ Ext.define('Hamsket.view.add.Add',{
 										,fieldLabel: 'Override OS'
 										,name: 'os_override'
 										,anchor: '100%'
-										,value: me.edit ? 
-														me.record.get('os_override') ? me.record.get('os_override') :
-															me.service.get('os_override') ? me.service.get('os_override') :
-																''
-														: me.record.get('os_override') ? me.record.get('os_override') :
-															''
+										,value: me.edit ? me.record.get('os_override') ? me.record.get('os_override') : me.service.get('os_override') ? me.service.get('os_override') : ''
+														: me.record.get('os_override') ? me.record.get('os_override') : ''
 										,editable: false
 										,forceSelection: true
 										,queryMode: 'local'
@@ -334,7 +331,7 @@ Ext.define('Hamsket.view.add.Add',{
 										,valueField: 'platform'
 										,multiSelect: false
 										,listeners: {
-											select(form, selected, opts) {
+											select: function(form, selected, opts) {
 												if (selected.data.platform === '') {
 													const version_override = form.nextSibling('[name=chrome_version]').value;
 													version_override || form.nextSibling('[name=userAgent]').setDisabled(false);
@@ -349,14 +346,10 @@ Ext.define('Hamsket.view.add.Add',{
 										,fieldLabel: 'Override Chrome Version'
 										,name: 'chrome_version'
 										,anchor: '100%'
-										,value: me.edit ?
-														me.record.get('chrome_version') ? me.record.get('chrome_version') :
-															me.service.get('chrome_version') ? me.service.get('chrome_version') :
-																''
-														: me.record.get('chrome_version') ? me.record.get('chrome_version') :
-															''
+										,value: me.edit ? me.record.get('chrome_version') ? me.record.get('chrome_version') : me.service.get('chrome_version') ? me.service.get('chrome_version') : ''
+														: me.record.get('chrome_version') ? me.record.get('chrome_version') : ''
 										,listeners: {
-											change(form, new_value, old_value, opts) {
+											change: function(form, new_value, old_value, opts) {
 												if (new_value === '') {
 													const os_override = form.previousSibling('[name=os_override]').value;
 													os_override || form.nextSibling('[name=userAgent]').setDisabled(false);
@@ -373,9 +366,7 @@ Ext.define('Hamsket.view.add.Add',{
 										,anchor: '100%'
 										,labelWidth: 64
 										,fieldStyle: 'font-family: Consolas, Lucida Console, Monaco, monospace !important;'
-										,value: me.edit ? me.service.get('userAgent') ? me.service.get('userAgent') :
-															'' :
-															''
+										,value: me.edit ? me.service.get('userAgent') ? me.service.get('userAgent') : '' : ''
 										,hidden: me.edit ? !me.service.get('userAgent') : true
 										,disabled: true
 									},
@@ -399,10 +390,10 @@ Ext.define('Hamsket.view.add.Add',{
 						,hidden: (me.edit ? Ext.getStore('ServicesList').getById(me.record.get('type')).get('note') === '' : me.record.get('note') === '')
 						,data: { note: (me.edit ? Ext.getStore('ServicesList').getById(me.record.get('type')).get('note') : me.record.get('note')) }
 						,margin: '10 0 0 0'
-						,style: 'background-color:#93CFE0;color:#053767;border-radius:6px;'
+						,style: 'background-color:#93CFE0;color:#053767;border-radius:6px;display:flex;align-items:center;padding:12px 16px;'
 						,tpl: [
-							 '<i class="fa fa-info-circle" aria-hidden="true" style="font-size:40px;margin:20px;"></i>'
-							,'<span style="font-size: 15px;position: absolute;padding: 10px 10px 10px 0;">{note}</span>'
+							 '<i class="x-fas fa-info-circle" aria-hidden="true" style="font-size:24px;flex-shrink:0;"></i>'
+							,'<span style="font-size:14px;margin-left:12px;">{note}</span>'
 						]
 					}
 				]
@@ -425,7 +416,6 @@ Ext.define('Hamsket.view.add.Add',{
 
 		this.callParent(this);
 	}
-
 	,listeners: {
 		show: 'onShow'
 	}

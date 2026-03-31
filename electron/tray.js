@@ -1,14 +1,14 @@
 // Module to create tray icon
+const { app, electron, nativeImage, nativeTheme, Menu, MenuItem, Tray } = require('electron');
 const path = require('path');
-const {app, electron, nativeImage, Menu, MenuItem, Tray} = require('electron');
 
 let appIcon = null;
 
 exports.create = function(win, config) {
-	if (process.platform === 'darwin' || appIcon || config.get('window_display_behavior') === 'show_taskbar' ) 
+	if (process.platform === 'darwin' || appIcon || config.get('window_display_behavior') === 'show_taskbar' )
 		return;
 
-	const locale = require(path.join(app.getAppPath(), '/resources/languages/'+config.get('locale')));
+	const locale = require(path.join(app.getAppPath(), '/resources/languages/' + config.get('locale')));
 	const iconName = process.platform === 'linux' || process.platform === 'darwin' ? 'IconTray.png' : 'Icon.ico';
 	const iconPath = path.join(app.getAppPath(), `/resources/${iconName}`);
 	const icon = nativeImage.createFromPath(iconPath);
@@ -43,14 +43,10 @@ exports.create = function(win, config) {
 		case 'sunos':
 			// Double click is not supported and Click its only supported when app indicator is not used.
 			// Read more here (Platform limitations): https://github.com/electron/electron/blob/master/docs/api/tray.md
-			appIcon.on('click', function() {
-				win.webContents.executeJavaScript('ipc.send("toggleWin", true);');
-			});
+			appIcon.on('click', () => { win.webContents.executeJavaScript('ipc.send("toggleWin", true);'); });
 			break;
 		case 'win32':
-			appIcon.on('double-click', function() {
-				win.webContents.executeJavaScript('ipc.send("toggleWin", true);');
-			});
+			appIcon.on('double-click', () => { win.webContents.executeJavaScript('ipc.send("toggleWin", true);'); });
 			break;
 		default:
 			break;

@@ -3,6 +3,11 @@ const path = require('path');
 const csvjson = require('csvjson');
 const Crowdin = require('crowdin');
 
+var crowdin = new Crowdin({
+	apiKey: '',
+	endpointUrl: 'https://api.crowdin.net/api/project/rambox'
+});
+
 var deleteFolderRecursive = function(path) {
 	if( fs.existsSync(path) ) {
 		fs.readdirSync(path).forEach(function(file,index){
@@ -17,14 +22,10 @@ var deleteFolderRecursive = function(path) {
 	}
 };
 
-var crowdin = new Crowdin({
-	apiKey: '',
-	endpointUrl: 'https://api.crowdin.net/api/project/rambox'
-});
-
 var args = process.argv.slice(2);
 
-if ( args.indexOf('download') >= 0 ) crowdin.downloadToPath('resources/languages').then(function() { console.info('Download finished!') });
+if ( args.indexOf('download') >= 0 )
+	crowdin.downloadToPath('resources/languages').then(function() { console.info('Download finished!') });
 
 if ( args.indexOf('generate') >= 0 ) {
 	fs.readdirSync(__dirname+'/resources/languages').filter(file => fs.lstatSync(path.join(__dirname+'/resources/languages', file)).isDirectory()).forEach(function(locale) {
@@ -47,4 +48,5 @@ if ( args.indexOf('generate') >= 0 ) {
 	});
 }
 
-if ( args.length === 0 ) console.error('No arguments passed');
+if ( args.length === 0 )
+	console.error('No arguments passed');

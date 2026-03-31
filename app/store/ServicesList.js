@@ -1,22 +1,18 @@
 Ext.define('Hamsket.store.ServicesList', {
 	 extend: 'Ext.data.Store'
 	,alias: 'store.serviceslist'
-
 	,requires: [
 		'Ext.data.proxy.LocalStorage'
 	]
-
 	,model: 'Hamsket.model.ServiceList'
-
 	,proxy: {
 		 type: 'memory'
 	}
-
 	,sorters: [{
 		 property: 'name'
 		,direction: 'ASC'
 	}]
-
+	,storeId: 'ServicesList'
 	,autoLoad: true
 	,autoSync: true
 	,pageSize: 100000
@@ -206,7 +202,7 @@ Ext.define('Hamsket.store.ServicesList', {
 			,logo: 'protonmail.png'
 			,name: 'ProtonMail'
 			,description: locale['services[20]']
-			,url: 'https://mail.protonmail.me'
+			,url: 'https://account.proton.me/login'
 			,type: 'email'
 		},
 		{

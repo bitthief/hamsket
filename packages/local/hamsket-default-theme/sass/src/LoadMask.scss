@@ -7,7 +7,7 @@
 	width: 120px;
 	.x-mask-msg-text {
 		padding: 0 0 0 24px;
-		background-image: url(images/loadmask/loading.gif);
+		background-image: url(get-resource-path('images/loadmask/loading.gif'));
 		background-repeat: no-repeat;
 		background-position: 0 0;
 	}

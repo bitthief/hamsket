@@ -2,11 +2,8 @@
  * Singleton class to handle the global unread counter.
  */
 Ext.define('Hamsket.util.UnreadCounter', {
-
 	singleton: true,
-
-	constructor(config) {
-
+	constructor: function(config) {
 		config = config || {};
 
 		/**
@@ -36,7 +33,7 @@ Ext.define('Hamsket.util.UnreadCounter', {
 		 *
 		 * @return {number}
 		 */
-		this.getTotalUnreadCount = function() {
+		this.getTotalUnreadCount = () => {
 			return totalUnreadCount;
 		};
 
@@ -46,7 +43,7 @@ Ext.define('Hamsket.util.UnreadCounter', {
 		 * @param {*} id				Id of the service to set the global unread count for.
 		 * @param {number} unreadCount	The global unread count for the service.
 		 */
-		this.setUnreadCountForService = function(id, unreadCount) {
+		this.setUnreadCountForService = (id, unreadCount) => {
 			unreadCount = parseInt(unreadCount, 10);
 
 			if (unreadCountByService.has(id)) {
@@ -63,7 +60,7 @@ Ext.define('Hamsket.util.UnreadCounter', {
 		 *
 		 * @param {*} id	Id of the service to clear the global unread count for.
 		 */
-		this.clearUnreadCountForService = function(id) {
+		this.clearUnreadCountForService = (id) => {
 			if (unreadCountByService.has(id)) {
 				totalUnreadCount -= unreadCountByService.get(id);
 			}
