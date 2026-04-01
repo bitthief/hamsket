@@ -120,6 +120,11 @@
 	color: #ffffff;
 }
 
+/* Drag-and-drop tab reordering */
+.hamsket-dark .x-dd-drag-proxy .x-tab {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
 /* Overflow menu button */
 .hamsket-dark .x-tab-bar-more-icon {
 	color: #a0a0a0;

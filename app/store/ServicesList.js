@@ -24,7 +24,8 @@ Ext.define('Hamsket.store.ServicesList', {
 			,description: locale['services[0]']
 			,url: 'https://web.whatsapp.com/'
 			,type: 'messaging'
-			,js_unread: `let checkUnread=()=>{const elements=document.querySelectorAll("#pane-side div span div span[aria-label]");let count=0;for(const i of elements){const gp=i.parentNode.parentNode;0===gp.querySelectorAll('#pane-side *[data-icon="muted"]').length&&count++}hamsket.updateBadge(count)};setInterval(checkUnread,1e3);let unregister_queue=[];navigator.serviceWorker.getRegistrations().then(registrations=>{for(const registration of registrations)unregister_queue.push(registration.unregister());return unregister_queue}).then(queue=>{}).catch(err=>{});`		},
+			,js_unread: `let dbCache=null;const openDB=()=>new Promise((resolve,reject)=>{const req=indexedDB.open("model-storage");req.onsuccess=()=>{dbCache=req.result;resolve()};req.onerror=()=>reject()});const checkUnread=()=>{if(!dbCache){openDB().then(checkUnread).catch(()=>{});return}try{const txn=dbCache.transaction("chat","readonly");const store=txn.objectStore("chat");const query=store.getAll();query.onsuccess=()=>{let unread=0;for(const chat of query.result){if(chat.unreadCount>0&&!chat.archive&&chat.muteExpiration===0&&!chat.isAutoMuted){unread+=chat.unreadCount}}hamsket.updateBadge(unread)};query.onerror=()=>{dbCache=null}}catch(e){dbCache=null}};setInterval(checkUnread,3e3);navigator.serviceWorker.getRegistrations().then(r=>{for(const reg of r)reg.unregister()}).catch(()=>{});`
+		},
 		{
 			 id: 'slack'
 			,logo: 'slack.png'
@@ -32,22 +33,14 @@ Ext.define('Hamsket.store.ServicesList', {
 			,description: locale['services[1]']
 			,url: 'https://___.slack.com/'
 			,type: 'messaging'
-			,js_unread: `let checkUnread=()=>{const indirectSelector=".p-channel_sidebar__channel--unread:not(.p-channel_sidebar__channel--muted)",indirect=document.querySelectorAll(indirectSelector).length;let direct=0;const badges=document.querySelectorAll(indirectSelector+" > .p-channel_sidebar__badge");for(const badge of badges){const i=parseInt(badge.innerHTML);direct+=isNaN(i)?0:i}hamsket.updateBadge(direct,indirect)};setInterval(checkUnread,3e3);`
-		},
-		{
-			 id: 'noysi'
-			,logo: 'noysi.png'
-			,name: 'Noysi'
-			,description: locale['services[2]']
-			,url: 'https://noysi.com/#/identity/sign-in'
-			,type: 'messaging'
+			,js_unread: `let checkUnread=()=>{const indirectSelector=".p-channel_sidebar__channel--unread:not(.p-channel_sidebar__channel--muted)";const indirect=document.querySelectorAll(indirectSelector).length;let direct=0;const badges=document.querySelectorAll(indirectSelector+" .p-channel_sidebar__badge");for(const badge of badges){const i=parseInt(badge.textContent);if(!isNaN(i))direct+=i}hamsket.updateBadge(direct,indirect)};setInterval(checkUnread,3e3);`
 		},
 		{
 			 id: 'messenger'
 			,logo: 'messenger.png'
 			,name: 'Messenger'
 			,description: locale['services[3]']
-			,url: ' https://www.messenger.com'
+			,url: 'https://www.messenger.com'
 			,type: 'messaging'
 			,titleBlink: true
 			,note: 'To enable desktop notifications, you have to go to Options inside Messenger.'
@@ -63,34 +56,13 @@ Ext.define('Hamsket.store.ServicesList', {
 			,note: 'Text and Audio calls are supported only. <a href="https://github.com/TheGoddessInari/hamsket/wiki/Skype" target="_blank">Read more...</a>'
 		},
 		{
-			 id: 'hangouts'
-			,logo: 'hangouts.png'
-			,name: 'Hangouts'
-			,description: locale['services[5]']
-			,url: 'https://hangouts.google.com/'
-			,type: 'messaging'
-			,titleBlink: true
-			,manual_notifications: true
-			,js_unread: `const checkUnread=()=>{const myframe=document.querySelector("#hangout-landing-chat iframe"),mydocument=myframe&&"contentDocument"in myframe?myframe.contentDocument:myframe.contentWindow.document,count=mydocument?mydocument.body.querySelectorAll(".ee").length:0;hamsket.updateBadge(count)};setInterval(checkUnread,3e3);`
-		},
-		{
-			 id: 'hipchat'
-			,logo: 'hipchat.png'
-			,name: 'HipChat'
-			,description: locale['services[6]']
-			,url: 'https://___.hipchat.com/chat'
-			,type: 'messaging'
-			,js_unread: `let checkUnread=()=>{const e=document.getElementsByClassName("hc-badge");let t=0;for(let i of e)t+=parseInt(i.innerHTML.trim());hamsket.updateBadge(t)};setInterval(checkUnread,3e3);`
-			,custom_domain: true
-		},
-		{
 			 id: 'telegram'
 			,logo: 'telegram.png'
 			,name: 'Telegram'
 			,description: locale['services[7]']
 			,url: 'https://web.telegram.org/'
 			,type: 'messaging'
-			,js_unread: `const checkUnread=()=>{const unread_messages=document.querySelectorAll(".badge.unread:not(.is-muted), .Badge.unread:not(.muted)");let count=0;for(const unread of unread_messages)count+=hamsket.parseIntOrZero(unread.textContent.trim());hamsket.updateBadge(count)};setInterval(checkUnread,3e3);`
+			,js_unread: `const checkUnread=()=>{let count=0;const webA=document.querySelectorAll(".ChatBadge.unread:not(.muted)");const webK=document.querySelectorAll(".rp:not(.is-muted) .dialog-subtitle-badge");const badges=webA.length?webA:webK;for(const b of badges){const n=parseInt(b.textContent);if(!isNaN(n))count+=n}hamsket.updateBadge(count)};setInterval(checkUnread,3e3);`
 		},
 		{
 			 id: 'wechat'
@@ -108,7 +80,7 @@ Ext.define('Hamsket.store.ServicesList', {
 			,url: 'https://mail.google.com/mail/?labs=0'
 			,type: 'email'
 			,allow_popups: true
-			,js_unread: `let checkUnread=()=>{const a=document.getElementsByClassName("aim")[0].textContent.split(":");hamsket.updateBadge(parseInt(a[a.length-1].replace(/[^0-9]/g,"")))};setInterval(checkUnread,3e3);`
+			,js_unread: `let checkUnread=()=>{try{const m=document.title.match(/Inbox\\s*\\((\\d+)\\)/);if(m){hamsket.updateBadge(parseInt(m[1]));return}const a=document.getElementsByClassName("aim")[0];if(a){const parts=a.textContent.split(":");hamsket.updateBadge(parseInt(parts[parts.length-1].replace(/[^0-9]/g,""))||0)}else{hamsket.updateBadge(0)}}catch(e){hamsket.updateBadge(0)}};setInterval(checkUnread,3e3);`
 			,note: 'To enable desktop notifications, you have to go to Settings inside Gmail. <a href="https://support.google.com/mail/answer/1075549?ref_topic=3394466" target="_blank">Read more...</a>'
 		},
 		{
@@ -129,14 +101,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,type: 'messaging'
 			,note: 'To enable desktop notifications, you have to go to Options inside GroupMe. To count unread messages, be sure to be in Chats.'
 			,js_unread: `let checkUnread=()=>{const a=document.querySelectorAll(".badge-count:not(.ng-hide)");let b=0;for(let i of a)b+=parseInt(i.innerHTML.trim());hamsket.updateBadge(b)};setInterval(checkUnread,3e3);`
-		},
-		{
-			 id: 'grape'
-			,logo: 'grape.png'
-			,name: 'Grape'
-			,description: locale['services[13]']
-			,url: 'https://chatgrape.com/accounts/login/'
-			,type: 'messaging'
 		},
 		{
 			 id: 'gitter'
@@ -162,10 +126,10 @@ Ext.define('Hamsket.store.ServicesList', {
 			,logo: 'discord.png'
 			,name: 'Discord'
 			,description: locale['services[16]']
-			,url: 'https://discordapp.com/login'
+			,url: 'https://discord.com/login'
 			,type: 'messaging'
 			,titleBlink: true
-			,js_unread: `const getMentionCount=badges=>{let alerts=0;for(const badge of badges)alerts+=hamsket.parseIntOrZero(badge.textContent);return alerts},getServerUnread=badges=>{let alerts=0;for(const badge of badges)alerts+="1"===badge.style.opacity&&"8px"===badge.style.height?1:0;return alerts},checkUnread=()=>{const mentions=document.querySelectorAll('[class*="lowerBadge-"] > [class*="numberBadge-"]'),unread=document.querySelectorAll('[class*="pill-"] > [class*="item-"]'),direct=getMentionCount(mentions),indirect=getServerUnread(unread);hamsket.updateBadge(direct,indirect)};setInterval(checkUnread,3e3);`
+			,js_unread: `const checkUnread=()=>{let direct=0;const badges=document.querySelectorAll('[class*="lowerBadge_"] [class*="numberBadge_"],[class*="lowerBadge-"] [class*="numberBadge-"]');for(const badge of badges){const n=parseInt(badge.textContent);if(!isNaN(n))direct+=n}const indirect=document.title.indexOf("\\u2022")!==-1?1:0;hamsket.updateBadge(direct,indirect)};setInterval(checkUnread,3e3);`
 			,note: 'To enable desktop notifications, you have to go to Options inside Discord.'
 		},
 		{
@@ -248,45 +212,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,type: 'messaging'
 		},
 		{
-			 id: 'sync'
-			,logo: 'sync.png'
-			,name: 'Sync'
-			,description: locale['services[26]']
-			,url: 'https://m.wantedly.com/login'
-			,type: 'messaging'
-		},
-		{
-			 id: 'bearychat'
-			,logo: 'bearychat.png'
-			,name: 'BearyChat'
-			,url: 'https://___.bearychat.com/'
-			,type: 'messaging'
-		},
-		{
-			 id: 'voxer'
-			,logo: 'voxer.png'
-			,name: 'Voxer'
-			,description: locale['services[29]']
-			,url: 'https://web.voxer.com/'
-			,type: 'messaging'
-		},
-		{
-			 id: 'dasher'
-			,logo: 'dasher.png'
-			,name: 'Dasher'
-			,description: locale['services[30]']
-			,url: 'https://dasher.im/'
-			,type: 'messaging'
-		},
-		{
-			 id: 'flowdock'
-			,logo: 'flowdock.png'
-			,name: 'Flowdock'
-			,description: locale['services[31]']
-			,url: 'https://www.flowdock.com/login'
-			,type: 'messaging'
-		},
-		{
 			 id: 'mattermost'
 			,logo: 'mattermost.png'
 			,name: 'Mattermost'
@@ -314,22 +239,77 @@ Ext.define('Hamsket.store.ServicesList', {
 			,note: 'You have to use this service by signing in with your mobile number.'
 		},
 		{
-			 id: 'icq'
-			,logo: 'icq.png'
-			,name: 'ICQ'
-			,description: locale['services[35]']
-			,url: 'https://web.icq.com/'
-			,type: 'messaging'
-			,js_unread: `let checkUnread=()=>{let total=0;const counters=document.getElementsByClassName("icq-msg-counter");for(let counter of counters)total+=parseInt("block"===counter.style.display?counter.innerHTML.trim():0);hamsket.updateBadge(total)};setInterval(checkUnread,3e3);`
-			,titleBlink: true
+			 id: 'threads'
+			,logo: 'threads.png'
+			,name: 'Threads'
+			,description: 'Threads is a text-based social app by Meta.'
+			,url: 'https://www.threads.net/'
+			,type: 'social'
 		},
 		{
-			 id: 'tweetdeck'
-			,logo: 'tweetdeck.png'
-			,name: 'TweetDeck'
-			,description: locale['services[36]']
-			,url: 'https://tweetdeck.twitter.com/'
+			 id: 'bluesky'
+			,logo: 'bluesky.png'
+			,name: 'Bluesky'
+			,description: 'Bluesky is a decentralized social network built on the AT Protocol.'
+			,url: 'https://bsky.app/'
+			,type: 'social'
+		},
+		{
+			 id: 'chatgpt'
+			,logo: 'chatgpt.png'
+			,name: 'ChatGPT'
+			,description: 'ChatGPT is an AI assistant by OpenAI.'
+			,url: 'https://chatgpt.com/'
+			,type: 'ai'
+		},
+		{
+			 id: 'claude'
+			,logo: 'claude.png'
+			,name: 'Claude'
+			,description: 'Claude is an AI assistant by Anthropic.'
+			,url: 'https://claude.ai/'
+			,type: 'ai'
+		},
+		{
+			 id: 'gemini'
+			,logo: 'gemini.png'
+			,name: 'Gemini'
+			,description: 'Gemini is an AI assistant by Google.'
+			,url: 'https://gemini.google.com/'
+			,type: 'ai'
+		},
+		{
+			 id: 'notion'
+			,logo: 'notion.png'
+			,name: 'Notion'
+			,description: 'Notion is an all-in-one workspace for notes, tasks, wikis, and databases.'
+			,url: 'https://www.notion.so/'
+			,type: 'productivity'
+		},
+		{
+			 id: 'linear'
+			,logo: 'linear.png'
+			,name: 'Linear'
+			,description: 'Linear is a project management tool for software teams.'
+			,url: 'https://linear.app/'
+			,type: 'productivity'
+		},
+		{
+			 id: 'figma'
+			,logo: 'figma.png'
+			,name: 'Figma'
+			,description: 'Figma is a collaborative design tool for UI/UX.'
+			,url: 'https://www.figma.com/'
+			,type: 'productivity'
+		},
+		{
+			 id: 'signal'
+			,logo: 'signal.png'
+			,name: 'Signal'
+			,description: 'Signal is a privacy-focused encrypted messaging app.'
+			,url: 'https://signal.org/'
 			,type: 'messaging'
+			,note: 'Signal requires linking your phone to use the desktop/web version.'
 		},
 		{
 			 id: 'custom'
@@ -339,22 +319,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,url: '___'
 			,type: 'custom'
 			,allow_popups: true
-		},
-		{
-			 id: 'zinc'
-			,logo: 'zinc.png'
-			,name: 'Zinc'
-			,description: locale['services[39]']
-			,url: 'https://zinc-app.com/'
-			,type: 'messaging'
-		},
-		{
-			 id: 'freenode'
-			,logo: 'freenode.png'
-			,name: 'FreeNode'
-			,description: locale['services[40]']
-			,url: 'https://webchat.freenode.net/'
-			,type: 'messaging'
 		},
 		{
 			 id: 'mightytext'
@@ -420,13 +384,12 @@ Ext.define('Hamsket.store.ServicesList', {
 			,type: 'email'
 		},
 		{
-			 id: 'glip'
+			 id: 'ringcentral'
 			,logo: 'glip.png'
-			,name: 'Glip'
-			,description: 'Glip is fully searchable, real-time group chat & video chat, task management, file sharing, calendars and more.'
-			,url: 'https://glip.com/'
+			,name: 'RingCentral'
+			,description: 'RingCentral is a team messaging and video conferencing platform for business communication.'
+			,url: 'https://app.ringcentral.com/'
 			,type: 'messaging'
-			,note: 'To enable desktop notifications, you have to go to Options inside Glip.'
 		},
 		{
 			 id: 'yandex'
@@ -466,7 +429,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,js_unread: `let checkUnread=()=>{let a=0,b=!1;$(".activity").each(function(){a+=parseInt($(this).html())});const msgs=$(".panel[style*='display:block'] .msg");for(let msg of msgs)b?a++:$(this).hasClass("last_seen")&&(b=!0);hamsket.updateBadge(a)};setInterval(checkUnread,3e3);`
 			,custom_domain: true
 		},
-		/* TODO: fix kiwi */
 		{
 			 id: 'icloud'
 			,logo: 'icloud.png'
@@ -486,14 +448,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,js_unread: `let checkUnread=()=>{const t=document.querySelectorAll(".e-item .e-link:not(.hidden) .badge.pull-right.count");let e=0;for(let i of t){let iTrim=parseInt(i.textContent.trim());iTrim%1==0&&"block"===window.getComputedStyle(i).display&&(e+=parseInt(iTrim))}hamsket.updateBadge(e)};setInterval(checkUnread,1e3);`
 		},
 		{
-			 id: 'amium'
-			,logo: 'amium.png'
-			,name: 'Amium'
-			,description: 'Amium turns any file into a real-time activity feed and conversation. So you can work better, together.'
-			,url: 'https://___.amium.com/'
-			,type: 'messaging'
-		},
-		{
 			 id: 'hootsuite'
 			,logo: 'hootsuite.png'
 			,name: 'Hootsuite'
@@ -509,15 +463,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,url: '___'
 			,type: 'email'
 			,js_unread: `let checkUnread=()=>{hamsket.updateBadge(appCtxt.getById(ZmFolder.ID_INBOX).numUnread)};setInterval(checkUnread,3e3);`
-		},
-		{
-			 id: 'kaiwa'
-			,logo: 'kaiwa.png'
-			,name: 'Kaiwa'
-			,description: 'A modern and Open Source Web client for XMPP.'
-			,url: '___'
-			,type: 'messaging'
-			,js_unread: `let checkUnread=()=>{let count=0;for(let node of document.getElementsByClassName("unread"))node.innerHTML&&(count+=parseInt(node.innerHTML));hamsket.updateBadge(count)};setInterval(checkUnread,3e3);`
 		},
 		{
 			 id: 'movim'
@@ -548,53 +493,12 @@ Ext.define('Hamsket.store.ServicesList', {
 			,custom_domain: true
 		},
 		{
-			 id: 'socialcast'
-			,logo: 'socialcast.png'
-			,name: 'Socialcast'
-			,description: 'Socialcast is the premier enterprise social networking platform that connects people to the knowledge, ideas and resources they need to work more effectively.'
-			,url: 'https://___.socialcast.com/'
-			,type: 'messaging'
-		},
-		{
-			 id: 'fleep'
-			,logo: 'fleep.png'
-			,name: 'Fleep'
-			,description: 'Fleep enables communication within and across organizations - be it your team chats, project communication or 1:1 conversations.'
-			,url: 'https://fleep.io/chat'
-			,type: 'messaging'
-			,custom_js: `document.getElementsByClassName("google-login-area")[0].remove(),document.getElementsByClassName("microsoft-login-area")[0].remove();`
-		},
-		{
 			 id: 'webexteams'
 			,logo: 'webexteams.png'
 			,name: 'Cisco Webex Teams'
 			,description: 'Cisco Webex Teams is for group chat, video calling, and sharing documents with your team. It’s all backed by Cisco security and reliability.'
 			,url: 'https://teams.webex.com/'
 			,type: 'messaging'
-		},
-		{
-			 id: 'drift'
-			,logo: 'drift.png'
-			,name: 'Drift'
-			,description: 'Drift is a messaging app that makes it easy for businesses to talk to their website visitors and customers in real-time, from anywhere.'
-			,url: 'https://app.drift.com/'
-			,type: 'messaging'
-		},
-		{
-			 id: 'typetalk'
-			,logo: 'typetalk.png'
-			,name: 'Typetalk'
-			,description: 'Typetalk brings fun and ease to team discussions through instant messaging on desktop and mobile devices.'
-			,url: 'https://typetalk.in/signin'
-			,type: 'messaging'
-		},
-		{
-			 id: 'openmailbox'
-			,logo: 'openmailbox.png'
-			,name: 'Openmailbox'
-			,description: 'Free mail hosting. Respect your rights and your privacy.'
-			,url: 'https://app.openmailbox.org/webmail/'
-			,type: 'email'
 		},
 		{
 			 id: 'flock'
@@ -612,14 +516,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,name: 'Crisp'
 			,description: 'Connect your customers to your team.'
 			,url: 'https://app.crisp.chat/'
-			,type: 'messaging'
-		},
-		{
-			 id: 'smooch'
-			,logo: 'smooch.png'
-			,name: 'Smooch'
-			,description: 'Unified multi-channel messaging for businesses, bots and software makers.'
-			,url: 'https://app.smooch.io/'
 			,type: 'messaging'
 		},
 		{
@@ -651,19 +547,12 @@ Ext.define('Hamsket.store.ServicesList', {
 		{
 			 id: 'teams'
 			,logo: 'teams.png'
-			,name: 'Teams'
+			,name: 'Microsoft Teams'
 			,description: 'Microsoft Teams is the chat-based workspace in Office 365 that integrates all the people, content, and tools your team needs to be more engaged and effective.'
 			,url: 'https://teams.microsoft.com'
 			,custom_js: 'Object.defineProperty(navigator.serviceWorker,"register",{value:()=>Promise.reject()});'
 			,type: 'messaging'
-		},
-		{
-			 id: 'kezmo'
-			,logo: 'kezmo.png'
-			,name: 'Kezmo'
-			,description: 'Kezmo is an enterprise chat and collaboration tool to help teams get things done. It’s an email alternative for secure team communication.'
-			,url: 'https://app.kezmo.com/web/'
-			,type: 'messaging'
+			,js_unread: `const checkUnread=()=>{let messages=0;const badges=document.querySelectorAll(".fui-Badge");for(const badge of badges){const n=parseInt(badge.textContent);if(!isNaN(n))messages+=n}hamsket.updateBadge(messages)};setInterval(checkUnread,3e3);`
 		},
 		{
 			 id: 'lounge'
@@ -677,19 +566,10 @@ Ext.define('Hamsket.store.ServicesList', {
 		{
 			 id: 'linkedin'
 			,logo: 'linkedin.png'
-			,name: 'LinkedIn Messaging'
-			,description: 'Manage your professional identity. Build and engage with your professional network. Access knowledge, insights and opportunities.'
+			,name: 'LinkedIn'
+			,description: 'Professional networking and messaging platform.'
 			,url: 'https://www.linkedin.com/messaging'
-			,type: 'messaging'
-		},
-		{
-			 id: 'zyptonite'
-			,logo: 'zyptonite.png'
-			,name: 'Zyptonite'
-			,description: 'Zyptonite is the ultimate cyber secure communication tool for enterprise customers designed to address the need to securely communicate via voice, video, and chat, and transfer files and information across a global mobile workforce.'
-			,url: 'https://app.zyptonite.com/'
-			,type: 'messaging'
-			,js_unread: `let checkUnread=()=>{const a=document.getElementsByClassName("z-messages");let b=0;for(let i of a)b+=parseInt(i.innerHTML.trim());hamsket.updateBadge(b)};setInterval(checkUnread,3e3);`
+			,type: 'social'
 		},
 		{
 			 id: 'fastmail'
@@ -700,14 +580,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,type: 'email'
 			,js_unread: `let checkUnread=()=>{const e=document.getElementsByClassName("v-FolderSource-badge");let t=0;for(const i of e){const iTrim=parseInt(i.innerHTML.trim());t+=isNaN(iTrim)?0:iTrim}hamsket.updateBadge(t)};setInterval(checkUnread,3e3),setTimeout(function(){O.WindowController.openExternal=function(a){let b=document.createElement("a");b.href=a,b.setAttribute("target","_blank"),b.click()}},3e3);`
 			,note: 'To enable desktop notifications, you have to go to Settings inside FastMail.'
-		},
-		{
-			 id: 'hibox'
-			,logo: 'hibox.png'
-			,name: 'Hibox'
-			,description: 'Hibox is a secure and private messaging platform for your business.'
-			,url: 'https://app.hibox.co/'
-			,type: 'messaging'
 		},
 		{
 			 id: 'jandi'
@@ -748,9 +620,9 @@ Ext.define('Hamsket.store.ServicesList', {
 			 id: 'mastodon'
 			,logo: 'mastodon.png'
 			,name: 'Mastodon'
-			,description: 'Mastodon is a free, open-source social network server. A decentralized solution to commercial platforms, it avoids the risks of a single company monopolizing your communication. Anyone can run Mastodon and participate in the social network seamlessly.'
+			,description: 'Mastodon is a free, open-source social network server. A decentralized solution to commercial platforms.'
 			,url: 'https://mastodon.social/auth/sign_in'
-			,type: 'messaging'
+			,type: 'social'
 			,custom_domain: true
 			,note: '<a href="https://instances.social/" target="_blank">List of instances</a>'
 		},
@@ -764,14 +636,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,js_unread: `let checkUnread=()=>{hamsket.updateBadge(parseInt(document.getElementsByClassName("sidebar-notification-indicator").length>0?document.getElementsByClassName("sidebar-notification-indicator")[0].innerHTML:0))};setInterval(checkUnread,3e3);`
 		},
 		{
-			 id: 'clocktweets'
-			,logo: 'clocktweets.png'
-			,name: 'ClockTweets'
-			,description: 'Schedule your Tweets with love. Save time and manage your social media strategy easily.'
-			,url: 'https://clocktweets.com/dashboard/'
-			,type: 'messaging'
-		},
-		{
 			 id: 'intercom'
 			,logo: 'intercom.png'
 			,name: 'Intercom'
@@ -781,14 +645,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,js_unread: `let checkUnread=()=>{const a=document.getElementsByClassName("unread")[0];hamsket.updateBadge(t=void 0===a?0:parseInt(a.textContent.replace(/[^0-9]/g,"")))};setInterval(checkUnread,3e3);`
 		},
 		{
-			 id: 'Kune'
-			,logo: 'kune.png'
-			,name: 'Kune'
-			,description: 'Kune is a web tool, based on Apache Wave, for creating environments of constant inter-communication, collective intelligence, knowledge and shared work.'
-			,url: 'https://kune.cc'
-			,type: 'messaging'
-		},
-		{
 			 id: 'googlevoice'
 			,logo: 'googlevoice.png'
 			,name: 'Google Voice'
@@ -796,24 +652,6 @@ Ext.define('Hamsket.store.ServicesList', {
 			,url: 'https://voice.google.com'
 			,type: 'messaging'
 			,js_unread: `let checkUnread=()=>{const e=document.querySelectorAll("a[gv-test-id='sidenav-calls'] .navItemBadge, a[gv-test-id='sidenav-messages'] .navItemBadge, a[gv-test-id='sidenav-voicemail'] .navItemBadge");let n=0;e.forEach(r=>{hamsket.isInViewport(r)&&(n+=hamsket.parseIntOrZero(r.innerHTML))}),hamsket.updateBadge(n)};setInterval(checkUnread,3e3);`
-		},
-		{
-			 id: 'sandstorm'
-			,logo: 'sandstorm.png'
-			,name: 'Sandstorm'
-			,description: 'Sandstorm is a self-hostable web productivity suite.'
-			,url: 'https://oasis.sandstorm.io/'
-			,type: 'messaging'
-			,custom_domain: true
-			,allow_popups: true
-		},
-		{
-			 id: 'gadugadu'
-			,logo: 'gadugadu.png'
-			,name: 'Gadu-Gadu'
-			,description: 'The most popular Polish messenger.'
-			,url: 'https://www.gg.pl/'
-			,type: 'messaging'
 		},
 		{
 			 id: 'mailru'
@@ -833,19 +671,10 @@ Ext.define('Hamsket.store.ServicesList', {
 			,custom_domain: true
 		},
 		{
-			 id: 'stride'
-			,logo: 'stride.png'
-			,name: 'Stride'
-			,description: 'Stride is the complete team communication solution with group messaging, video meetings, and built-in collaboration tools.'
-			,url: 'https://app.stride.com/___'
-			,type: 'messaging'
-			,js_unread: `let checkUnread=()=>{let direct=0,indirect=0;const conversations=document.querySelectorAll(".conversations-nav .nav-item .activity-indicator");for(let n of conversations)n.classList.contains("has-count")?direct+=parseInt(n.innerHTML):indirect++;hamsket.updateBadge(direct,indirect)};setInterval(checkUnread,3e3);`
-		},
-		{
 			 id: 'hangoutschat'
 			,logo: 'hangoutschat.png'
-			,name: 'Hangouts Chat'
-			,description: 'A messaging platform built for teams.'
+			,name: 'Google Chat'
+			,description: 'Google Chat is a messaging platform built for teams.'
 			,url: 'https://chat.google.com/'
 			,type: 'messaging'
 			,titleBlink: true
@@ -865,9 +694,9 @@ Ext.define('Hamsket.store.ServicesList', {
 			id: 'instagram'
 			,logo: 'instagram.png'
 			,name: 'Instagram'
-			,description: 'Instagram is a photo-sharing app for Android and iOS.'
-			,url: ' https://www.instagram.com'
-			,type: 'messaging'
+			,description: 'Instagram is a photo and video sharing social networking service.'
+			,url: 'https://www.instagram.com'
+			,type: 'social'
 			,js_unread: `const checkUnread=()=>{const element=document.querySelector('a[href^="/direct/inbox"]');hamsket.updateBadge(hamsket.parseIntOrZero(element.textContent))};setInterval(checkUnread,3e3);`
 		},
 	]

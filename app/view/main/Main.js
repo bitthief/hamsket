@@ -68,6 +68,33 @@ Ext.define('Hamsket.view.main.Main', {
 									,uncheckedValue: false
 									,inputValue: true
 								}
+								,{
+									 xtype: 'checkbox'
+									,boxLabel: 'Social'
+									,margin: '0 10 0 0'
+									,name: 'social'
+									,checked: true
+									,uncheckedValue: false
+									,inputValue: true
+								}
+								,{
+									 xtype: 'checkbox'
+									,boxLabel: 'AI'
+									,margin: '0 10 0 0'
+									,name: 'ai'
+									,checked: true
+									,uncheckedValue: false
+									,inputValue: true
+								}
+								,{
+									 xtype: 'checkbox'
+									,boxLabel: 'Productivity'
+									,margin: '0 10 0 0'
+									,name: 'productivity'
+									,checked: true
+									,uncheckedValue: false
+									,inputValue: true
+								}
 							]
 							,listeners: {
 								change: 'doTypeFilter'
@@ -105,8 +132,9 @@ Ext.define('Hamsket.view.main.Main', {
 							,tpl: [
 								 '<tpl for=".">'
 									,'<div class="service" data-qtip="{description}">'
-										,'<img src="resources/icons/{logo}" width="48" />'
+										,'<img src="resources/icons/{logo}" width="48" onerror="this.onerror=null;this.src=\'resources/icons/custom.png\'" />'
 										,'<span>{name}</span>'
+										,'<span class="service-type-badge service-type-{type}">{type}</span>'
 									,'</div>'
 								,'</tpl>'
 							]
@@ -150,7 +178,7 @@ Ext.define('Hamsket.view.main.Main', {
 							 xtype: 'templatecolumn'
 							,width: 40
 							,variableRowHeight: true
-							,tpl: `<img src='{[ values.type !== "custom" ? "resources/icons/"+values.logo : (values.logo == "" ? "resources/icons/custom.png" : values.logo) ]}' data-qtip='{type:capitalize}' width='32' style='{[ values.enabled ? "-webkit-filter: grayscale(0)" : "-webkit-filter: grayscale(1)" ]}' />`
+							,tpl: `<img src='{[ values.type !== "custom" ? "resources/icons/"+values.logo : (values.logo == "" ? "resources/icons/custom.png" : values.logo) ]}' data-qtip='{type:capitalize}' width='32' style='{[ values.enabled ? "-webkit-filter: grayscale(0)" : "-webkit-filter: grayscale(1)" ]}' onerror="this.onerror=null;this.src='resources/icons/custom.png'" />`
 						}
 						,{
 							 dataIndex: 'name'
