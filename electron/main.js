@@ -47,6 +47,7 @@ const config = new Config({
 		,proxyPassword: ''
 		,locale: 'en'
 		,enable_hidpi_support: false
+		,dark_mode: 'system'
 		,default_service: 'hamsketTab'
 		,x: undefined
 		,y: undefined
@@ -422,6 +423,17 @@ ipcMain.handle('app:getArgv', () => {
 
 ipcMain.handle('app:getUserDataPath', () => {
 	return app.getPath('userData');
+});
+
+// Dark mode / nativeTheme
+ipcMain.handle('nativeTheme:shouldUseDarkColors', () => {
+	return nativeTheme.shouldUseDarkColors;
+});
+
+nativeTheme.on('updated', () => {
+	if (mainWindow && !mainWindow.isDestroyed()) {
+		mainWindow.webContents.send('nativeTheme:updated', nativeTheme.shouldUseDarkColors);
+	}
 });
 
 // ==========================================================================

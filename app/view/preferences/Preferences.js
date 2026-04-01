@@ -117,6 +117,33 @@ Ext.define('Hamsket.view.preferences.Preferences', {
 						,margin: '0 0 10 0'
 					}
 					,{
+						 xtype: 'combo'
+						,name: 'dark_mode'
+						,fieldLabel: locale['preferences[11]'] || 'Dark Mode'
+						,labelAlign: 'left'
+						,width: 380
+						,labelWidth: 180
+						,value: config.dark_mode || 'system'
+						,displayField: 'label'
+						,valueField: 'value'
+						,editable: false
+						,store: Ext.create('Ext.data.Store', {
+							 fields: ['value', 'label']
+							,data: [
+								 { 'value': 'system', 'label': locale['preferences[12]'] || 'Auto (follow system)' }
+								,{ 'value': 'light', 'label': locale['preferences[13]'] || 'Light' }
+								,{ 'value': 'dark', 'label': locale['preferences[14]'] || 'Dark' }
+							]
+						})
+						,listeners: {
+							change: function(combo, newValue) {
+								// Apply immediately for preview
+								const controller = Ext.cq1('app-main').getController();
+								controller.applyDarkMode(newValue);
+							}
+						}
+					}
+					,{
 						 xtype: 'checkbox'
 						,name: 'auto_launch'
 						,boxLabel: locale['preferences[5]']

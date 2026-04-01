@@ -413,6 +413,10 @@
             "output": "js"
         },
         {
+            "path": "resources/css",
+            "output": "css"
+        },
+        {
             "path": "${toolkit.name}/resources",
             "mode": "relative"
         },

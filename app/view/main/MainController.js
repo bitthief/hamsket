@@ -2,7 +2,17 @@ Ext.define('Hamsket.view.main.MainController', {
 	 extend: 'Ext.app.ViewController'
 	,alias: 'controller.main'
 	,initialize: function( tabPanel ) {
+		const me = this;
 		const config = ipc.sendSync('getConfig');
+
+		// Dark mode
+		me.applyDarkMode(config.dark_mode);
+		window.hamsket.theme.onUpdated(function() {
+			const currentConfig = window.hamsket.config.get();
+			if (currentConfig.dark_mode === 'system') {
+				me.applyDarkMode('system');
+			}
+		});
 
 		tabPanel.setTabPosition(config.tabbar_location);
 		tabPanel.setTabRotation(0);
@@ -443,5 +453,26 @@ Ext.define('Hamsket.view.main.MainController', {
 		const me = this;
 
 		Ext.create('Hamsket.view.preferences.Preferences').show();
-	},
+	}
+	,applyDarkMode: function(mode) {
+		const me = this;
+		if (mode === 'system') {
+			window.hamsket.theme.shouldUseDarkColors().then(function(isDark) {
+				me.setDarkClass(isDark);
+			});
+		} else {
+			me.setDarkClass(mode === 'dark');
+		}
+	}
+	,setDarkClass: function(isDark) {
+		// Ensure dark-mode.css is loaded (injected after all ExtJS CSS)
+		if (!document.getElementById('hamsket-dark-css')) {
+			const link = document.createElement('link');
+			link.id = 'hamsket-dark-css';
+			link.rel = 'stylesheet';
+			link.href = 'resources/css/dark-mode.css';
+			document.head.appendChild(link);
+		}
+		document.body.classList.toggle('hamsket-dark', isDark);
+	}
 });

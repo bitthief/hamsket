@@ -1,0 +1,772 @@
+/*
+ * Hamsket Dark Mode — CSS overlay
+ * All selectors scoped under .hamsket-dark so styles are inactive by default.
+ * Toggled via document.body.classList.add/remove('hamsket-dark').
+ */
+
+/* ========================================================================
+   Base / Body
+   ======================================================================== */
+
+.hamsket-dark {
+	background-color: #1e1e1e !important;
+	color: #e0e0e0 !important;
+}
+
+/* ========================================================================
+   Panels
+   ======================================================================== */
+
+.hamsket-dark .x-panel-body-default {
+	background-color: #1e1e1e !important;
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-panel-header-default {
+	background-color: #252525 !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-panel-header-default .x-title-text-default {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-panel-header-light {
+	background-color: #252525;
+}
+
+.hamsket-dark .x-panel-body-default-framed {
+	background-color: #1e1e1e;
+}
+
+/* ========================================================================
+   Windows / Dialogs
+   ======================================================================== */
+
+.hamsket-dark .x-window-default {
+	background-color: #2a2a2a !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-window-body-default {
+	background-color: #2a2a2a !important;
+}
+
+.hamsket-dark .x-window-header-default {
+	background-color: #252525 !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-window-header-default .x-title-text-default {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-window-body {
+	background-color: #2a2a2a;
+}
+
+/* Window close/minimize/maximize tools */
+.hamsket-dark .x-tool-img {
+	color: #a0a0a0;
+}
+
+.hamsket-dark .x-tool-over .x-tool-img {
+	color: #e0e0e0;
+}
+
+/* ========================================================================
+   Tab Bar
+   ======================================================================== */
+
+.hamsket-dark .x-tab-bar-default {
+	background-color: #252525 !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-tab-default {
+	background-color: #252525 !important;
+}
+
+.hamsket-dark .x-tab-default-top {
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-tab-inner-default {
+	color: #c0c0c0 !important;
+}
+
+.hamsket-dark .x-tab-active .x-tab-inner-default {
+	color: #ffffff !important;
+}
+
+.hamsket-dark .x-tab-bar-strip-default {
+	background-color: #4d9fd4;
+}
+
+.hamsket-dark .x-tab-close-btn {
+	color: #808080;
+}
+
+.hamsket-dark .x-tab-close-btn-over {
+	color: #e0e0e0;
+}
+
+/* Tab icon */
+.hamsket-dark .x-tab-icon-el-default {
+	color: #b0b0b0;
+}
+
+.hamsket-dark .x-tab-active .x-tab-icon-el-default {
+	color: #ffffff;
+}
+
+/* Overflow menu button */
+.hamsket-dark .x-tab-bar-more-icon {
+	color: #a0a0a0;
+}
+
+/* ========================================================================
+   Toolbars
+   ======================================================================== */
+
+.hamsket-dark .x-toolbar-default {
+	background-color: #252525 !important;
+	border-color: #3a3a3a !important;
+	background-image: none !important;
+}
+
+.hamsket-dark .x-toolbar-default .x-tool-img {
+	background-color: transparent !important;
+}
+
+.hamsket-dark .x-toolbar-footer {
+	background-color: #252525 !important;
+	border-color: #3a3a3a !important;
+}
+
+/* Footer toolbar text and icons */
+.hamsket-dark .x-toolbar-footer .x-btn-inner-default-small {
+	color: #d0d0d0 !important;
+}
+
+.hamsket-dark .x-toolbar-footer .x-btn-icon-el-default-small {
+	color: #c0c0c0 !important;
+}
+
+.hamsket-dark .x-toolbar-footer .x-btn-default-small {
+	background-color: #353535 !important;
+	border-color: #4a4a4a !important;
+	background-image: none !important;
+}
+
+.hamsket-dark .x-toolbar-footer .x-btn.x-btn-pressed.x-btn-default-small {
+	background-color: #2a4a6b !important;
+}
+
+.hamsket-dark .x-toolbar-footer .x-btn-default-small-over {
+	background-color: #3a7aaa !important;
+}
+
+.hamsket-dark .x-toolbar-footer .x-label {
+	color: #b0b0b0 !important;
+}
+
+.hamsket-dark .x-toolbar-footer .x-label span {
+	color: #b0b0b0 !important;
+}
+
+.hamsket-dark .x-toolbar-footer .x-toolbar-separator {
+	border-color: #4a4a4a;
+}
+
+.hamsket-dark .x-toolbar-separator-horizontal {
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-toolbar-separator-vertical {
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-toolbar-text-default {
+	color: #e0e0e0;
+}
+
+/* ========================================================================
+   Grids & Data Views
+   ======================================================================== */
+
+.hamsket-dark .x-grid-body {
+	background-color: #1e1e1e;
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-grid-item {
+	background-color: #1e1e1e;
+	color: #e0e0e0;
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-grid-item-alt {
+	background-color: #252525;
+}
+
+.hamsket-dark .x-grid-item-over {
+	background-color: #2a4a6b !important;
+	color: #e0e0e0 !important;
+}
+
+.hamsket-dark .x-grid-item-selected {
+	background-color: #1e3a5f !important;
+	color: #ffffff !important;
+}
+
+.hamsket-dark .x-grid-item-focused .x-grid-cell {
+	border-color: #4d9fd4 !important;
+}
+
+.hamsket-dark .x-grid-item-focused {
+	outline-color: #4d9fd4;
+}
+
+.hamsket-dark .x-grid-header-ct {
+	background-color: #252525;
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-column-header {
+	background-color: #252525;
+	border-color: #3a3a3a;
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-grid-cell {
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-grid-empty {
+	background-color: #1e1e1e;
+	color: #a0a0a0;
+}
+
+.hamsket-dark .x-grid-group-title {
+	color: #a0a0a0;
+}
+
+/* Action column icons */
+.hamsket-dark .x-action-col-glyph {
+	color: #b0b0b0 !important;
+}
+
+.hamsket-dark .x-action-col-glyph:hover {
+	color: #4d9fd4 !important;
+}
+
+/* Show hidden action icons on row hover */
+.hamsket-dark .x-grid-item-over .x-hidden-display {
+	color: #b0b0b0 !important;
+}
+
+/* Check column (enabled/disabled checkmarks) */
+.hamsket-dark .x-grid-checkcolumn {
+	color: #b0b0b0 !important;
+}
+
+.hamsket-dark .x-grid-checkcolumn-checked {
+	color: #5bb8f0 !important;
+}
+
+/* Grid group header */
+.hamsket-dark .x-grid-group-hd {
+	background-color: #2a3a4a !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-group-hd-container {
+	color: #c0c0c0 !important;
+}
+
+.hamsket-dark .x-grid-group-title {
+	color: #c0c0c0 !important;
+}
+
+/* Grid row cell text */
+.hamsket-dark .x-grid-cell-inner {
+	color: #e0e0e0;
+}
+
+/* ========================================================================
+   Form Fields
+   ======================================================================== */
+
+.hamsket-dark .x-form-text-default {
+	background-color: #2a2a2a !important;
+	color: #e0e0e0 !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-form-text-default:focus {
+	border-color: #4d9fd4;
+}
+
+.hamsket-dark .x-form-trigger-default {
+	background-color: #2a2a2a;
+	color: #e0e0e0;
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-form-trigger-over {
+	background-color: #353535;
+}
+
+.hamsket-dark .x-form-item-label-default {
+	color: #b0b0b0;
+}
+
+.hamsket-dark .x-form-cb-label-default {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-form-display-field-default {
+	color: #e0e0e0;
+}
+
+/* Checkbox */
+.hamsket-dark .x-form-checkbox-default {
+	border-color: #555;
+}
+
+/* Combo box / bound list dropdown */
+.hamsket-dark .x-boundlist {
+	background-color: #2a2a2a;
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-boundlist-item {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-boundlist-item-over {
+	background-color: #2a4a6b;
+	color: #ffffff;
+}
+
+.hamsket-dark .x-boundlist-selected {
+	background-color: #1e3a5f;
+	color: #ffffff;
+}
+
+/* Number field spinner */
+.hamsket-dark .x-form-spinner-default {
+	border-color: #3a3a3a;
+}
+
+/* ========================================================================
+   Menus (tab right-click context menu etc.)
+   ======================================================================== */
+
+.hamsket-dark .x-menu-default {
+	background-color: #2a2a2a !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-menu-body-default {
+	background-color: #2a2a2a !important;
+}
+
+.hamsket-dark .x-menu-item-text-default {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-menu-item-active {
+	background-color: #2a4a6b;
+}
+
+.hamsket-dark .x-menu-item-active .x-menu-item-text-default {
+	color: #ffffff;
+}
+
+.hamsket-dark .x-menu-item-separator {
+	border-color: #3a3a3a;
+	background-color: #2a2a2a;
+}
+
+.hamsket-dark .x-menu-icon-separator-default {
+	background-color: #2a2a2a;
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-menu-item-icon-default {
+	color: #a0a0a0;
+}
+
+/* ========================================================================
+   Buttons
+   ======================================================================== */
+
+/* Default toolbar buttons */
+.hamsket-dark .x-btn-default-toolbar-small {
+	background-color: #353535 !important;
+	border-color: #3a3a3a !important;
+	background-image: none !important;
+}
+
+.hamsket-dark .x-btn-default-toolbar-small .x-btn-inner-default-toolbar-small {
+	color: #e0e0e0 !important;
+}
+
+.hamsket-dark .x-btn-default-toolbar-small-over {
+	background-color: #404040 !important;
+	border-color: #4d9fd4 !important;
+}
+
+.hamsket-dark .x-btn-default-toolbar-small-pressed,
+.hamsket-dark .x-btn.x-btn-pressed.x-btn-default-toolbar-small {
+	background-color: #2a4a6b !important;
+}
+
+/* Segmented buttons (back/forward in context menu) */
+.hamsket-dark .x-segmented-button-item {
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-segmented-button-item-default-toolbar-small .x-btn-inner-default-toolbar-small {
+	color: #e0e0e0;
+}
+
+/* Primary action buttons */
+.hamsket-dark .x-btn-default-small {
+	background-color: #2e658e;
+}
+
+.hamsket-dark .x-btn-default-small-over {
+	background-color: #3a7aaa;
+}
+
+.hamsket-dark .x-btn-inner-default-small {
+	color: #ffffff;
+}
+
+/* Decline buttons */
+.hamsket-dark .x-btn-decline-small {
+	border-color: #3a3a3a;
+}
+
+/* Plain toolbar buttons (no background) */
+.hamsket-dark .x-btn-plain-toolbar-small .x-btn-inner-plain-toolbar-small {
+	color: #e0e0e0;
+}
+
+/* Toolbar button glyphs/icons */
+.hamsket-dark .x-btn-glyph {
+	color: #c0c0c0;
+}
+
+.hamsket-dark .x-btn-default-toolbar-small .x-btn-icon-el {
+	color: #c0c0c0;
+}
+
+.hamsket-dark .x-btn-default-toolbar-small-over .x-btn-icon-el {
+	color: #ffffff;
+}
+
+/* ========================================================================
+   Fieldsets
+   ======================================================================== */
+
+.hamsket-dark .x-fieldset-default {
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-fieldset-header-text-default {
+	color: #e0e0e0;
+}
+
+/* ========================================================================
+   Labels & Text
+   ======================================================================== */
+
+.hamsket-dark .x-label-default {
+	color: #b0b0b0;
+}
+
+.hamsket-dark h3 {
+	color: #e0e0e0;
+}
+
+.hamsket-dark a {
+	color: #4d9fd4;
+}
+
+.hamsket-dark code {
+	background-color: #353535;
+	color: #e0e0e0;
+}
+
+/* ========================================================================
+   Loading Mask
+   ======================================================================== */
+
+.hamsket-dark .x-mask {
+	background-color: rgba(0, 0, 0, 0.6);
+}
+
+.hamsket-dark .x-mask-msg {
+	background-color: #2a2a2a;
+	border-color: #3a3a3a;
+}
+
+.hamsket-dark .x-mask-msg-text {
+	color: #e0e0e0;
+}
+
+/* ========================================================================
+   Service List (Add Service view / main panel)
+   ======================================================================== */
+
+.hamsket-dark .service {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .service span {
+	color: #d0d0d0;
+}
+
+.hamsket-dark .service:hover {
+	background-color: #2a3a4a;
+}
+
+/* "Add a new Service" title */
+.hamsket-dark .x-title-text {
+	color: #e0e0e0;
+}
+
+/* Checkbox labels in the service filter bar (Messaging/Email) */
+.hamsket-dark .x-form-cb-label {
+	color: #d0d0d0;
+}
+
+/* ========================================================================
+   Statusbar
+   ======================================================================== */
+
+/* Keep statusbar branded — just darken slightly */
+.hamsket-dark .x-statusbar {
+	background-color: #1e4a6e !important;
+	border-color: #3a3a3a !important;
+}
+
+/* ========================================================================
+   Main toolbar (top blue bar) button visibility
+   ======================================================================== */
+
+.hamsket-dark .x-toolbar-main .x-btn-default-toolbar-small .x-btn-inner-default-toolbar-small {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-toolbar-main .x-btn-default-toolbar-small .x-btn-icon-el {
+	color: #c0c0c0;
+}
+
+.hamsket-dark .x-toolbar-main .x-btn-default-toolbar-small {
+	background-color: transparent;
+	border-color: transparent;
+}
+
+.hamsket-dark .x-toolbar-main .x-btn-default-toolbar-small-over {
+	background-color: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hamsket-dark .x-toolbar-main .x-btn-default-toolbar-small-over .x-btn-icon-el {
+	color: #ffffff;
+}
+
+.hamsket-dark .x-toolbar-main {
+	background-color: #1e4a6e;
+}
+
+/* ========================================================================
+   Splitters
+   ======================================================================== */
+
+.hamsket-dark .x-splitter {
+	background-color: #3a3a3a;
+}
+
+/* ========================================================================
+   Tips / Tooltips
+   ======================================================================== */
+
+.hamsket-dark .x-tip-default {
+	background-color: #2a2a2a !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-tip-body-default {
+	background-color: #2a2a2a !important;
+	color: #e0e0e0 !important;
+}
+
+.hamsket-dark .x-tip-header-default {
+	background-color: #2a2a2a !important;
+}
+
+.hamsket-dark .x-tip-header-default .x-tip-header-text-default {
+	color: #e0e0e0;
+}
+
+/* Tooltip anchor/arrow */
+.hamsket-dark .x-tip-anchor {
+	border-color: #3a3a3a;
+}
+
+/* ========================================================================
+   MessageBox
+   ======================================================================== */
+
+.hamsket-dark .x-window-default-closable .x-window-body-default {
+	background-color: #2a2a2a;
+}
+
+/* ========================================================================
+   Scrollbar styling (Chromium)
+   ======================================================================== */
+
+.hamsket-dark ::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+.hamsket-dark ::-webkit-scrollbar-track {
+	background: #1e1e1e;
+}
+
+.hamsket-dark ::-webkit-scrollbar-thumb {
+	background: #555;
+	border-radius: 5px;
+}
+
+.hamsket-dark ::-webkit-scrollbar-thumb:hover {
+	background: #777;
+}
+
+.hamsket-dark ::-webkit-scrollbar-corner {
+	background: #1e1e1e;
+}
+
+/* ========================================================================
+   About dialog
+   ======================================================================== */
+
+.hamsket-dark .x-window-default div {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-window-default b {
+	color: #b0b0b0;
+}
+
+.hamsket-dark .x-window-default i {
+	color: #a0a0a0;
+}
+
+/* ========================================================================
+   Notification info box (update bar)
+   ======================================================================== */
+
+.hamsket-dark .x-toolbar-newversion {
+	background-color: #353525;
+}
+
+.hamsket-dark .x-toolbar-newversion label {
+	color: #e0e0e0;
+}
+
+/* ========================================================================
+   Bottom bar (Follow us / Sponsor / code-branch) and footer toolbars
+   ======================================================================== */
+
+.hamsket-dark .x-toolbar-footer .x-toolbar-text-default {
+	color: #a0a0a0;
+}
+
+/* Labels — override inline color:black on icons */
+.hamsket-dark .x-label-default {
+	color: #b0b0b0;
+}
+
+.hamsket-dark .x-label-default span {
+	color: #b0b0b0 !important;
+}
+
+/* Segmented button pressed state (used for "Follow us", "Help out" labels) */
+.hamsket-dark .x-btn.x-btn-pressed.x-btn-default-small,
+.hamsket-dark .x-btn-default-small-pressed {
+	background-color: #2a4a6b !important;
+	border-color: #3a3a3a !important;
+}
+
+.hamsket-dark .x-btn-default-small-pressed .x-btn-inner-default-small,
+.hamsket-dark .x-btn.x-btn-pressed .x-btn-inner-default-small {
+	color: #e0e0e0;
+}
+
+/* All small buttons (used in bottom bar, dialogs, etc.) */
+.hamsket-dark .x-btn.x-btn-default-small {
+	background-color: #2e658e !important;
+	border-color: #3a3a3a !important;
+	background-image: none !important;
+}
+
+.hamsket-dark .x-btn-default-small .x-btn-inner-default-small {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-btn-default-small .x-btn-icon-el {
+	color: #c0c0c0;
+}
+
+.hamsket-dark .x-btn.x-btn-default-small.x-btn-over,
+.hamsket-dark .x-btn-default-small-over {
+	background-color: #3a7aaa !important;
+	border-color: #4d9fd4 !important;
+}
+
+.hamsket-dark .x-btn-default-small-over .x-btn-inner-default-small {
+	color: #ffffff;
+}
+
+.hamsket-dark .x-btn-default-small-over .x-btn-icon-el,
+.hamsket-dark .x-btn.x-btn-default-small.x-btn-over .x-btn-icon-el {
+	color: #ffffff;
+}
+
+/* ========================================================================
+   General text/content overrides
+   ======================================================================== */
+
+/* Ensure all generic text inside dark panels is visible */
+.hamsket-dark .x-autocontainer-innerCt {
+	color: #e0e0e0;
+}
+
+.hamsket-dark .x-panel-body div {
+	color: #e0e0e0;
+}
+
+/* Search/filter text fields in header toolbars */
+.hamsket-dark .x-form-field {
+	background-color: #2a2a2a;
+	color: #e0e0e0;
+	border-color: #555;
+}
+
+/* Data view items */
+.hamsket-dark .x-dataview-item {
+	color: #e0e0e0;
+}
+
+/* Emptytext in grids/views */
+.hamsket-dark .x-grid-empty div {
+	color: #808080;
+}

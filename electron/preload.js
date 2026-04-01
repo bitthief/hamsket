@@ -38,6 +38,7 @@ const RECEIVE_CHANNELS = [
 	'tabResetZoom',
 	'toggleDoNotDisturb',
 	'lockWindow',
+	'nativeTheme:updated',
 ];
 
 const INVOKE_CHANNELS = [
@@ -52,6 +53,7 @@ const INVOKE_CHANNELS = [
 	'app:quit',
 	'app:getArgv',
 	'app:getUserDataPath',
+	'nativeTheme:shouldUseDarkColors',
 ];
 
 contextBridge.exposeInMainWorld('hamsket', {
@@ -144,5 +146,13 @@ contextBridge.exposeInMainWorld('hamsket', {
 	// Paths
 	paths: {
 		getUserData: () => ipcRenderer.invoke('app:getUserDataPath'),
+	},
+
+	// Theme / dark mode
+	theme: {
+		shouldUseDarkColors: () => ipcRenderer.invoke('nativeTheme:shouldUseDarkColors'),
+		onUpdated: (callback) => {
+			ipcRenderer.on('nativeTheme:updated', (event, isDark) => callback(isDark));
+		},
 	},
 });
