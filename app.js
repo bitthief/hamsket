@@ -11,7 +11,7 @@ Ext.application({
 });
 
 // auto update logic
-const ipc = require('electron').ipcRenderer;
+const ipc = window.hamsket.ipc;
 
 ipc.on('showAbout', function(event, message) {
 	if (!Ext.cq1('about')) {

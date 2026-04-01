@@ -133,7 +133,7 @@ Ext.define('Hamsket.view.preferences.Preferences', {
 						,name: 'hide_menu_bar'
 						,boxLabel: locale['preferences[1]']+' (<code>Alt</code> key to display)'
 						,value: config.hide_menu_bar
-						,hidden: process.platform === 'darwin'
+						,hidden: window.hamsket.platform === 'darwin'
 					}
 					,{
 						 xtype: 'combo'
@@ -191,7 +191,7 @@ Ext.define('Hamsket.view.preferences.Preferences', {
 								,{ 'value': 'taskbar_tray', 'label': 'Show in Taskbar and Tray Icon' }
 							]
 						})
-						,hidden: process.platform === 'darwin'
+						,hidden: window.hamsket.platform === 'darwin'
 					}
 					,{
 						 xtype: 'combo'
@@ -212,7 +212,7 @@ Ext.define('Hamsket.view.preferences.Preferences', {
 								,{ 'value': 'quit', 'label': 'Quit' }
 							]
 						})
-						,hidden: process.platform === 'darwin'
+						,hidden: window.hamsket.platform === 'darwin'
 					}
 					,{
 						 xtype: 'checkbox'
@@ -225,12 +225,12 @@ Ext.define('Hamsket.view.preferences.Preferences', {
 						,name: 'systemtray_indicator'
 						,boxLabel: 'Show System Tray indicator on unread messages'
 						,value: config.systemtray_indicator
-						,hidden: process.platform === 'darwin'
+						,hidden: window.hamsket.platform === 'darwin'
 					}
 					,{
 						 xtype: 'checkbox'
 						,name: 'flash_frame'
-						,boxLabel: process.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
+						,boxLabel: window.hamsket.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
 						,value: config.flash_frame
 					}
 					,{
@@ -251,7 +251,7 @@ Ext.define('Hamsket.view.preferences.Preferences', {
 						,name: 'enable_hidpi_support'
 						,boxLabel: locale['preferences[8]']
 						,value: config.enable_hidpi_support
-						,hidden: process.platform !== 'win32'
+						,hidden: window.hamsket.platform !== 'win32'
 					}
 					,{
 						 xtype: 'fieldset'

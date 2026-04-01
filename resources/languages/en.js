@@ -177,4 +177,4 @@ locale["services[43]"] = "Horde is a free and open source web-based groupware.";
 locale["services[44]"] = "SquirrelMail is a standards-based webmail package written in PHP.";
 locale["services[45]"] = "Ad-free business Email Hosting with a clean, minimalist interface. Integrated Calendar, Contacts, Notes, Tasks apps.";
 locale["services[46]"] = "Zoho chat is a secure and scalable real-time communication and collaboration platform for teams to improve their productivity.";
-module.exports = locale;
+if (typeof module !== "undefined") if (typeof module !== "undefined") module.exports = locale;

@@ -112,16 +112,14 @@ function createWindow () {
 		,acceptFirstMouse: true
 		,webPreferences: {
 			partition: 'persist:hamsket',
-			contextIsolation: false,
+			contextIsolation: true,
 			sandbox: false,
-			nodeIntegration: true,
+			nodeIntegration: false,
 			webviewTag: true,
 			spellcheck: false,
+			preload: path.join(__dirname, 'preload.js'),
 		}
 	});
-
-	// Electron 14.0+
-	require("@electron/remote/main").enable(mainWindow.webContents);
 
 	if ( !config.get('start_minimized') && config.get('maximized') )
 		mainWindow.maximize();
@@ -242,11 +240,11 @@ function createMasterPasswordWindow() {
 		 backgroundColor: '#0675A0'
 		,frame: false
 		,webPreferences: {
-			nodeIntegration: true,
-			contextIsolation: false,
+			nodeIntegration: false,
+			contextIsolation: true,
+			preload: path.join(__dirname, 'preload.js'),
 		}
 	});
-	require("@electron/remote/main").enable(mainMasterPasswordWindow.webContents);
 	mainMasterPasswordWindow.loadURL('file://' + __dirname + '/../masterpassword.html');
 	mainMasterPasswordWindow.on('close', () => { mainMasterPasswordWindow = null; });
 }
@@ -358,6 +356,75 @@ ipcMain.on('relaunchApp', (event) => {
 	app.relaunch();
 	app.quit(0);
 });
+
+// ==========================================================================
+// Phase 2: New IPC handlers for contextBridge preload
+// These replace @electron/remote calls from the renderer process
+// ==========================================================================
+
+ipcMain.on('getAppVersionSync', (event) => {
+	event.returnValue = app.getVersion();
+});
+
+ipcMain.handle('shell:openExternal', (event, url) => {
+	const allowedProtocols = ['http:', 'https:', 'mailto:'];
+	try {
+		const parsed = new URL(url);
+		if (allowedProtocols.includes(parsed.protocol)) {
+			return shell.openExternal(url);
+		}
+		console.warn(`[IPC] Blocked shell:openExternal for protocol: ${parsed.protocol}`);
+	} catch (e) {
+		console.warn(`[IPC] Invalid URL for shell:openExternal: ${url}`);
+	}
+});
+
+ipcMain.handle('dialog:showSave', (event, options) => {
+	return dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender), options);
+});
+
+ipcMain.handle('dialog:showOpen', (event, options) => {
+	return dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), options);
+});
+
+ipcMain.handle('fs:readFile', (event, filePath, encoding) => {
+	return fs.promises.readFile(filePath, encoding || 'utf8');
+});
+
+ipcMain.handle('fs:writeFile', (event, filePath, data) => {
+	return fs.promises.writeFile(filePath, data);
+});
+
+ipcMain.handle('fs:readBuildVersion', () => {
+	return fs.promises.readFile(path.join(app.getAppPath(), 'BUILDVERSION'), 'utf8').catch(() => 'unknown');
+});
+
+ipcMain.handle('session:clearServiceData', async (event, partition) => {
+	const ses = session.fromPartition(partition);
+	ses.flushStorageData();
+	await ses.clearCache();
+	await ses.clearStorageData();
+	await ses.cookies.flushStore();
+});
+
+ipcMain.handle('window:reload', (event) => {
+	const win = BrowserWindow.fromWebContents(event.sender);
+	if (win) win.reload();
+});
+
+ipcMain.handle('app:quit', () => {
+	app.quit();
+});
+
+ipcMain.handle('app:getArgv', () => {
+	return process.argv;
+});
+
+ipcMain.handle('app:getUserDataPath', () => {
+	return app.getPath('userData');
+});
+
+// ==========================================================================
 
 const haveLock = app.requestSingleInstanceLock();
 app.on('second-instance', (commandLine, workingDirectory) => {
@@ -633,7 +700,6 @@ app.on('ready', async () => {
 	const contextMenuModule = await import('electron-context-menu');
 	contextMenu = contextMenuModule.default;
 
-	require('@electron/remote/main').initialize();
 	if (config.get('master_password')) {
 		createMasterPasswordWindow();
 	} else {
@@ -671,8 +737,6 @@ app.on('before-quit', () => {
 
 // Prevent the ability to create WebView with nodeIntegration.
 app.on('web-contents-created', (event, contents) => {
-	require("@electron/remote/main").enable(contents);
-
 	const contextMenuWebContentsDispose = contextMenu({
 		window: contents,
 		showCopyImageAddress: true,

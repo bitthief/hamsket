@@ -160,11 +160,11 @@ Ext.define('Hamsket.ux.WebView',{
 					,partition: 'persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '')
 					,allowtransparency: 'on'
 					,autosize: 'on'
-					,webpreferences: 'contextIsolation=no,spellcheck=no'
+					,webpreferences: 'contextIsolation=yes,spellcheck=no'
 					//,disablewebsecurity: 'on' // Disabled because some services (Like Google Drive) dont work with this enabled
 					,allowpopups: 'on'
 					,userAgent: me.getUserAgent()
-					,preload: './resources/js/hamsket-service-api.js'
+					,preload: window.hamsket.webviewPreloadPath
 				}
 			}];
 
@@ -307,7 +307,6 @@ Ext.define('Hamsket.ux.WebView',{
 		// Removed in Electron 21
 		webview.addEventListener('new-window', (e) => {
 			e.preventDefault();
-			const { URL } = require('url');
 			const url = new URL(e.url);
 			const protocol = url.protocol;
 
@@ -317,7 +316,7 @@ Ext.define('Hamsket.ux.WebView',{
 
 			// Allow deep links
 			if ( !['http:',  'https:', 'about:', 'file:'].includes(protocol) )
-				return require('electron').shell.openExternal(e.url);
+				return window.hamsket.shell.openExternal(e.url);
 		});
 
 		webview.addEventListener('will-navigate', (e, url) => { e.preventDefault(); });
@@ -416,53 +415,8 @@ Ext.define('Hamsket.ux.WebView',{
 			// Scroll always to top (bug)
 			js_inject += 'document.body.scrollTop=0;';
 
-			// Open links in default browser
-			// Replace in Electron 21+
-			me.getWebContents().then(webContents => {
-				webContents.setWindowOpenHandler((details) => {
-					const { URL } = require('url');
-					const url = new URL(details.url);
-					const protocol = url.protocol;
-
-					// Block some deep links to prevent native desktop app is opened (e.g. Slack, Teams, Zoom)
-					if ( ['discord:', 'slack:', 'skype:', 'teams:', 'zoom:'].includes(protocol) )
-						return { action: 'deny' };
-
-					// Allow deep links
-					if ( !['file:', 'http:',  'https:', 'about:'].includes(protocol) ) {
-						require('@electron/remote').shell.openExternal(url.href);
-						return { action: 'allow' };
-					}
-
-					console.log("Blocked by 'setWindowOpenHandler': " + url.href);
-					return { action: 'deny' };
-				});
-
-				return webContents;
-			}).catch((error) => {
-				console.error(error);
-			});
-
-			me.getWebContents().then(webContents => {
-				// Handle Certificate Errors
-				webContents.on('certificate-error', (event, url, error, certificate, callback) => {
-					if ( me.record.get('trust') ) {
-						event.preventDefault();
-						callback(true);
-					} else {
-						callback(false);
-					}
-
-					me.down('statusbar').keep = true;
-					me.down('statusbar').show();
-					me.down('statusbar').setStatus({text: '<i class="x-fas fa-exclamation-triangle fa-fw" aria-hidden="true"></i> Certificate Warning'});
-					me.down('statusbar').down('button').show();
-				});
-
-				return webContents;
-			}).catch((error) => {
-				console.error(error);
-			});
+			// Open links and certificate errors are now handled in the main process
+			// via web-contents-created handler in electron/main.js
 
 			webview.executeJavaScript(js_inject);
 			webview.insertCSS(css_inject);
@@ -516,9 +470,7 @@ Ext.define('Hamsket.ux.WebView',{
 			}
 
 			function showWindowAndActivateTab(event) {
-				const currentWindow = require('@electron/remote').getCurrentWindow();
-				currentWindow.show();
-				currentWindow.focus();
+				window.hamsket.ipc.send('toggleWin', true);
 				const tabPanel = Ext.cq1('app-main');
 				if (tabPanel != undefined) {
 					tabPanel.getActiveTab().blur();
@@ -788,12 +740,10 @@ Ext.define('Hamsket.ux.WebView',{
 		}
 	}
 	,setZoomLevel: function(level) {
-		this.getWebContents().then(webContents => {
-			webContents.zoomLevel = level;
-			return webContents;
-		}).catch((error) => {
-			console.log(error);
-		});
+		const webview = this.getWebView();
+		if (webview) {
+			webview.setZoomLevel(level);
+		}
 	}
 	,zoomIn: function() {
 		const me = this;
@@ -849,18 +799,9 @@ Ext.define('Hamsket.ux.WebView',{
 		return false;
 	}
 	,getWebContents: function() {
-		const promise = new Promise((resolve, reject) => {
-			const webview = this.getWebView();
-			const webContents = () => {
-				const remote = require('@electron/remote');
-				const id = webview.getWebContentsId();
-				const webContents = remote.webContents.fromId(id);
-				return webContents;
-			};
-			if (this.record.get('enabled') && this.isReady) { resolve(webContents()); }
-			else webview.addEventListener("dom-ready", () => { resolve(webContents()); });
-		});
-		return promise;
+		// Stub preserved for compatibility — direct webContents access is no longer available
+		// after removing @electron/remote. Use IPC-based methods instead.
+		return Promise.reject(new Error('getWebContents() is no longer available. Use IPC methods.'));
 	}
 	,getUserAgent: function() {
 		const me = this;
@@ -883,19 +824,16 @@ Ext.define('Hamsket.ux.WebView',{
 	}
 	,updateUserAgent: function() {
 		const me = this;
-
-		me.getWebContents().then(webContents => {
-			webContents.setUserAgent(me.getUserAgent());
-			return webContents;
-		})
-		.catch((error) => { console.error(error); });
+		const webview = me.getWebView();
+		if (webview) {
+			webview.setUserAgent(me.getUserAgent());
+		}
 	}
 	,getOSArch: function(platform) {
 		const me = this;
 
-		const remote = require('@electron/remote');
-		platform = platform ? platform : remote.require('os').platform();
-		let arch = remote.require('os').arch();
+		platform = platform ? platform : window.hamsket.platform;
+		let arch = window.hamsket.arch;
 
 		switch (platform) {
 			case 'win32':
@@ -915,7 +853,7 @@ Ext.define('Hamsket.ux.WebView',{
 		return arch;
 	}
 	,getOSArchType: function() {
-		let arch = require('@electron/remote').require('os').arch();
+		let arch = window.hamsket.arch;
 
 		switch (arch) {
 			case 'x64':
@@ -948,7 +886,7 @@ Ext.define('Hamsket.ux.WebView',{
 	,getOSPlatform: function(platform) {
 		const me = this;
 
-		platform = platform ? platform : require('@electron/remote').require('os').platform();
+		platform = platform ? platform : window.hamsket.platform;
 		switch (platform) {
 			case 'win32':
 				platform = `${me.getOSRelease(platform)}; ${me.getOSArch(platform)}`;
@@ -971,45 +909,41 @@ Ext.define('Hamsket.ux.WebView',{
 		return platform;
 	}
 	,isWindows: function(platform) {
-		platform = platform ? platform : require('@electron/remote').require('os').platform();
+		platform = platform ? platform : window.hamsket.platform;
 		return platform === 'win32';
 	}
 	,isMac: function(platform) {
-		platform = platform ? platform : require('@electron/remote').require('os').platform();
+		platform = platform ? platform : window.hamsket.platform;
 		return platform === 'darwin';
 	}
 	,is32bit: function() {
-		const arch = require('@electron/remote').require('os').arch();
-		if (arch === 'ia32' || arch === 'x32')
-			return true;
-		else
-			return false;
+		const arch = window.hamsket.arch;
+		return (arch === 'ia32' || arch === 'x32');
 	}
 	,getOSRelease: function(platform) {
 		const me = this;
 
-		const remote = require('@electron/remote');
 		if (me.isWindows(platform)) {
 			if (platform) {
 				return "Windows NT 10.0";
 			} else {
-				return remote.require('os').release().match(/([0-9]+\.[0-9]+)/)[0];
+				return window.hamsket.osRelease.match(/([0-9]+\.[0-9]+)/)[0];
 			}
 		}
 		else if (me.isMac(platform)) {
-			return remote.require('os').release().split('.').join('_');
+			return window.hamsket.osRelease.split('.').join('_');
 		} else {
-			return remote.require('os').release();
+			return window.hamsket.osRelease;
 		}
 	}
 	,getChromeVersion: function(version) {
-		return version || require('@electron/remote').process.versions['chrome'];
+		return version || window.hamsket.versions.chrome;
 	}
 	,getElectronVersion: function() {
-		return require('@electron/remote').process.versions['electron'];
+		return window.hamsket.versions.electron;
 	}
 	,getAppVersion: function() {
-		return require('@electron/remote').app.getVersion();
+		return window.hamsket.appVersion;
 	}
 	,blur: function() {
 		this.getWebView().blur();
