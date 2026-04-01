@@ -24,7 +24,6 @@ The original dev went inactive; this fork initially upgraded Electron/Chromium f
 ### Runtime Dependencies
 | Package | Version | Notes |
 |---------|---------|-------|
-| `@electron/remote` | 2.1.3 | **Deprecated** — migrate to contextBridge/ipcRenderer (Phase 2) |
 | `auto-launch` | 5.0.6 | Auto-start on system boot |
 | `electron-context-menu` | 4.1.2 | Right-click context menus (ESM, loaded via dynamic import in ready handler) |
 | `electron-store` | 8.1.0 | Persistent config storage |
@@ -55,7 +54,8 @@ The original dev went inactive; this fork initially upgraded Electron/Chromium f
 ## Architecture
 
 ### Electron Main Process (`electron/`)
-- `main.js` — Window management, IPC handlers, config (electron-store), auto-launch, user-agent spoofing, proxy support, portable mode (data/ folder)
+- `main.js` — Window management, IPC handlers (ipcMain.handle/on), config (electron-store), auto-launch, user-agent spoofing, proxy support, portable mode (data/ folder)
+- `preload.js` — contextBridge-based safe API (`window.hamsket.*`), channel allowlists for send/receive/invoke
 - `menu.js` — Application menu (locale-aware)
 - `tray.js` — System tray icon with unread badge (Windows/Linux only)
 - `updater.js` — Auto-updater (feed URL: `forcent.io/download/hamsket/update/`, currently disabled in code)
@@ -69,7 +69,7 @@ Uses classic MVC/MVVM pattern:
 - `store/ServicesList.js` — Built-in service catalog
 - `view/main/Main.js` — Main tab panel, bottom toolbar with "Follow us" social links
 - `view/main/MainController.js` — Tab/service management logic
-- `view/main/About.js` — About dialog (uses `@electron/remote` + `fs` for version info)
+- `view/main/About.js` — About dialog (uses `window.hamsket.*` bridge for version info)
 - `view/add/Add.js` — Add/edit service dialog
 - `view/preferences/Preferences.js` — Settings dialog
 - `ux/WebView.js` — Custom webview wrapper panel (core component)
@@ -150,12 +150,11 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 ## Key Patterns & Gotchas
 
 - **Webview usage:** The app uses Electron's `<webview>` tag for embedding services. Deprecated but still functional with `webviewTag: true` in webPreferences.
-- **`@electron/remote`:** Used for IPC between renderer and main process. Deprecated; migrate to explicit ipcMain/ipcRenderer with contextBridge in Phase 2.
+- **contextBridge API:** All renderer↔main IPC goes through `window.hamsket.*` (exposed via `electron/preload.js`). `@electron/remote` has been fully removed.
 - **User-agent spoofing:** `electron/main.js` strips Electron/Hamsket from the user agent to avoid service detection/blocking. Google accounts get a hardcoded Firefox UA via `session.webRequest.onBeforeSendHeaders`.
 - **Portable mode:** If a `data/` folder exists next to the app, userData/logs/cache redirect there.
-- **Locale system:** Language files in `resources/languages/`, loaded via script injection in `index.html` using `ipcRenderer.sendSync`.
+- **Locale system:** Language files in `resources/languages/`, loaded via `window.hamsket.config.getSync()` in `index.html`.
 - **Unread counters:** Each service has a `js_unread` field containing JavaScript that runs inside the webview to extract unread counts. Service-specific and fragile — breaks when services change their DOM.
-- **DarkReader integration:** Dark theme support added via DarkReader library.
 - **ESM dependency:** `electron-context-menu` 4.x is pure ESM — loaded via `await import()` in the `app.on('ready')` handler, before any windows are created.
 
 ### ExtJS Framework Management
@@ -165,7 +164,7 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
   1. Set `$ext-trial: false` in `ext-X.Y.Z/classic/theme-base/sass/etc/all.scss` and `ext-X.Y.Z/modern/theme-base/sass/etc/all.scss`
   2. The `npm run patch-license` step (auto-runs during compile) patches the built `app.json`/`app.jsonp` to replace `"license":"trial"` with `"license":"commercial"` and removes watermark resources
 
-## Completed Work (This Session)
+## Completed Work
 
 ### Phase 1: Core Upgrades
 - Electron 27.0.0 → **35.7.5** (Chromium 134)
@@ -182,38 +181,37 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 - Fixed: updater URL → forcent.io
 - UI polish: service list text overflow, About dialog sizing, notification info box layout, Follow us brand icons
 
+### Phase 2: Security Hardening
+- Created `electron/preload.js` with `contextBridge.exposeInMainWorld('hamsket', ...)` safe API
+- Channel allowlists: SEND_CHANNELS, SEND_SYNC_CHANNELS, RECEIVE_CHANNELS, INVOKE_CHANNELS
+- Set `contextIsolation: true`, `nodeIntegration: false` in main window webPreferences
+- Added `ipcMain.handle()` async handlers for shell, dialog, fs, session, paths, window ops
+- Migrated all renderer code from `require('electron')`/`require('@electron/remote')` to `window.hamsket.*`:
+  - `app.js`, `Application.js`, `About.js`, `FileBackup.js`, `WebView.js`, `MainController.js`, `Preferences.js`
+  - `index.html`, `masterpassword.html`
+- Migrated `resources/js/hamsket-service-api.js` to use contextBridge preload API
+- Migrated `resources/js/hamsket-modal-api.js` to use contextBridge preload API
+- Removed `@electron/remote` dependency entirely
+- Fixed: default toolbar green background (#31B96E → #fff) that leaked into tab context menus
+- Fixed: About dialog height for long BuildVersion strings
+- Updated all 40+ locale files to use `window.hamsket.config.getSync()` instead of `ipcRenderer.sendSync`
+
 ## Planned Work (Priority Order)
 
-### Phase 2: Security Hardening (High Priority)
-Major refactor of renderer↔main process communication. All changes are interdependent — do as one batch.
+### Phase 3: Dark Mode
+- ExtJS panels/toolbars don't follow system dark mode (the service list panel has white background)
+- DarkReader was previously used but has been removed — need a new approach
+- May need theme-level SCSS changes for `$dark-mode` variable (already defined in theme vars)
+- Electron 35 has good `nativeTheme` API — wire it to ExtJS theme switching
 
-**Create preload script (`electron/preload.js`):**
-- Use `contextBridge.exposeInMainWorld('hamsket', { ... })` to expose safe API
-- Expose: `getConfig()`, `getVersion()`, `getPlatform()`, `getArch()`, `getProcessVersions()`, `send()`, `on()`, `invoke()`
+### Phase 4: Service List & UX Modernization
+- Audit built-in service list (~95 services) — many have changed URLs or no longer exist
+- Review and update `js_unread` counter snippets for active services
+- Replace deprecated `<webview>` tag with WebContentsView (Electron's modern replacement)
+- Add ability to reorder services via drag-and-drop
+- Consider adding service categories/folders
 
-**Update `electron/main.js` webPreferences:**
-- Set `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`
-- Add `preload: path.join(__dirname, 'preload.js')`
-- Convert `ipcMain.on('getConfig')` sync handler to `ipcMain.handle('getConfig')` async handler
-
-**Migrate renderer code (all files that use `require('electron')` or `require('@electron/remote')`):**
-- `app.js` — replace `require('electron').ipcRenderer` with `window.hamsket.*` bridge API
-- `app/Application.js` — replace `require('@electron/remote').app.getVersion()` / `process.argv`
-- `app/view/main/About.js` — replace `require('@electron/remote').app.getVersion()`, `require('fs').readFileSync`
-- `app/ux/FileBackup.js` — replace `require('@electron/remote')` for path/fs/dialog
-- `app/ux/WebView.js` — replace `require('@electron/remote')` for shell/getCurrentWindow/process
-- `app/view/main/MainController.js` — replace `require('@electron/remote')` for session
-- `app/view/preferences/PreferencesController.js` — replace IPC calls
-- `app/view/preferences/Preferences.js` — replace config access
-- `index.html` — replace inline `require('electron').ipcRenderer.sendSync('getConfig')`
-
-**Fix service webview preload (`resources/js/hamsket-service-api.js`):**
-- Replace `require('electron').ipcRenderer` with contextBridge-exposed API
-- The `Notification` override and `atob`/`btoa` polyfills need careful handling
-
-**Remove `@electron/remote` dependency entirely** after all migrations complete.
-
-### Phase 3: Fork Identity & Infrastructure
+### Phase 5: Fork Identity & Infrastructure
 - Update `electron-builder.json` — change app ID from `com.thegoddessinari.hamsket` to own
 - Update `package.json` — author, repository URL, bugs URL, homepage to bitthief/hamsket
 - Update `app/Application.js` — change update check URL from TheGoddessInari's GitHub to this fork
@@ -223,26 +221,13 @@ Major refactor of renderer↔main process communication. All changes are interde
 - Set up GitHub Actions CI/CD (build + release for Windows/Linux/macOS)
 - Configure auto-updater at `forcent.io/download/hamsket/update/`
 
-### Phase 4: Dark Mode
-- ExtJS panels/toolbars don't follow system dark mode (the service list panel has white background)
-- DarkReader integration exists but is partial — investigate what's working and what's not
-- May need theme-level SCSS changes for `$dark-mode` variable (already defined in theme vars)
-- Electron 35 has good `nativeTheme` API — wire it to ExtJS theme switching
-
-### Phase 5: Service List & UX Modernization
-- Audit built-in service list (~95 services) — many have changed URLs or no longer exist
-- Review and update `js_unread` counter snippets for active services
-- Replace deprecated `<webview>` tag with WebContentsView (Electron's modern replacement)
-- Add ability to reorder services via drag-and-drop
-- Consider adding service categories/folders
-
 ### Known Issues (Low Priority)
 - SASS build shows ENOENT errors for theme images with `undefined` path segment (cosmetic, no impact)
-- `hamsket-service-api.js` overrides `window.atob`/`window.btoa` — verify if still needed on Electron 35
-- `workspace.json` has stale `ext70`/`ext77` aliases removed but directory is named `ext-7.9.0` while it was originally `ext-7.7.0` — fully clean now
+- `ext-7.9.0/` is gitignored — worktrees need an NTFS junction: `cmd /c "mklink /J ext-7.9.0 C:\Users\Administrator\Code\hamsket\ext-7.9.0"`
 
 ## Code Style
 - No linter configured (no eslintrc). `.editorconfig` existed historically but was removed.
 - Prettier is a dev dependency but no config file or pre-commit hook.
 - ExtJS code follows Sencha conventions (Ext.define, xtype, configs, etc.).
-- Electron code is CommonJS (`require`/`module.exports`), except `electron-context-menu` which is ESM (dynamic import).
+- Electron main process and preload are CommonJS (`require`/`module.exports`), except `electron-context-menu` which is ESM (dynamic import).
+- Renderer code accesses Electron APIs exclusively through `window.hamsket.*` (never `require('electron')`).

@@ -141,46 +141,41 @@ Ext.define('Hamsket.view.main.MainController', {
 		if ( !serviceId )
 			return false;
 
-		const { session: rsession } = require('@electron/remote');
-
 		// Get Record
 		const rec = Ext.getStore('Services').getById(serviceId);
+		let partition;
+		let tab = null;
 		if ( !rec.get('enabled') ) {
-			const session = rsession.fromPartition(`persist:${rec.get('type')}_${serviceId}`);
-			clearData(session, null, resolve);
+			partition = `persist:${rec.get('type')}_${serviceId}`;
 		} else {
 			// Get Tab
-			const tab = Ext.getCmp('tab_'+serviceId);
-			const session = rsession.fromPartition(tab.getWebView().partition);
-			// Clear all trash data
-			clearData(session, tab, resolve);
+			tab = Ext.getCmp('tab_'+serviceId);
+			partition = tab.getWebView().partition;
 		}
 
-		const config = ipc.sendSync('getConfig');
+		const config = window.hamsket.config.get();
 		if ( config.default_service === rec.get('id') )
-			ipc.send('setConfig', Ext.apply(config, { default_service: 'hamsketTab' }));
+			window.hamsket.config.set(Ext.apply(config, { default_service: 'hamsketTab' }));
 
-		function clearData(session, tab, resolve) {
-			session.flushStorageData();
-			session.clearCache().then(session.clearStorageData).then(session.cookies.flushStore).catch((err) => {
-				console.error(`Error removing service data: ${rec.name} ${err}`);
-				Ext.Msg.alert('Error!', `Error removing service data: ${rec.name}: ${err}`);
-			}).finally(() => {
-				const service_store = Ext.getStore('Services');
-				// Remove record from localStorage
-				service_store.remove(rec);
-				service_store.sync();
-				// Close tab
-				if (tab)
-					tab.close();
-				if ( Ext.isFunction(resolve) )
-					resolve();
-				// Close waiting message
-				if ( total === actual ) {
-					Ext.Msg.close();
-				}
-			});
-		}
+		// Clear all trash data via IPC
+		window.hamsket.session.clearServiceData(partition).catch((err) => {
+			console.error(`Error removing service data: ${rec.name} ${err}`);
+			Ext.Msg.alert('Error!', `Error removing service data: ${rec.name}: ${err}`);
+		}).finally(() => {
+			const service_store = Ext.getStore('Services');
+			// Remove record from localStorage
+			service_store.remove(rec);
+			service_store.sync();
+			// Close tab
+			if (tab)
+				tab.close();
+			if ( Ext.isFunction(resolve) )
+				resolve();
+			// Close waiting message
+			if ( total === actual ) {
+				Ext.Msg.close();
+			}
+		});
 	}
 	,removeService: function( gridView, rowIndex, colIndex, col, e, rec, rowEl ) {
 		const me = this;

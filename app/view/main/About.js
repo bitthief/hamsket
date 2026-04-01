@@ -7,21 +7,26 @@ Ext.define('Hamsket.view.main.About', {
 	,resizable: false
 	,constrain: true
 	,width: 300
-	,height: 470
+	,height: 530
+	,autoScroll: true
 	,bodyPadding: 10
 	,initComponent: function() {
 		const me = this;
 
 		me.callParent(arguments);
-		me.data.buildversion = require('fs').readFileSync( __dirname + '/BUILDVERSION', 'utf8');
+		window.hamsket.fs.readBuildVersion().then(function(version) {
+			me.data.buildversion = version;
+			me.update(me.data);
+		});
 	}
 	,data: {
-		 version: require('@electron/remote').app.getVersion()
-		,platform: process.platform
-		,arch: process.arch
-		,electron: process.versions.electron
-		,chromium: process.versions.chrome
-		,node: process.versions.node
+		 version: window.hamsket.appVersion
+		,platform: window.hamsket.platform
+		,arch: window.hamsket.arch
+		,electron: window.hamsket.versions.electron
+		,chromium: window.hamsket.versions.chrome
+		,node: window.hamsket.versions.node
+		,buildversion: '...'
 	}
 	,tpl: [
 		 '<div style="text-align:center;"><img src="resources/Icon.png" width="100" /></div>'
