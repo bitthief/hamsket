@@ -245,6 +245,23 @@ body {
 	background-size: 16px;
 }
 
+// Drag-and-drop tab reordering polish
+.x-tab-reorderable {
+	transition: transform 0.15s ease-out;
+}
+.x-dd-drag-proxy .x-tab {
+	opacity: 0.85;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+	transform: scale(1.02);
+}
+.x-tab-top-active.x-tab-focus {
+	outline: none;
+}
+// Drop indicator for tab reordering
+.x-tab-bar .x-box-inner > .x-tab {
+	transition: margin 0.15s ease-out;
+}
+
 // Fix for scroller tab bar
 //.x-box-scroller-body-horizontal { width: auto !important; margin-right: 18px; padding-right: 18px; }
 //.x-box-scroller-tab-bar { z-index: 9999; }
@@ -254,6 +271,7 @@ body {
 	display: inline-block;
 	padding: 10px;
 	cursor: pointer;
+	position: relative;
 	img {
 		float: left;
 	}
@@ -265,6 +283,26 @@ body {
 		text-overflow: ellipsis;
 		display: block;
 	}
+	.service-type-badge {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		font-size: 9px;
+		line-height: 1;
+		padding: 2px 5px;
+		border-radius: 3px;
+		text-transform: uppercase;
+		font-weight: 600;
+		letter-spacing: 0.5px;
+		color: #fff;
+		background: #999;
+	}
+	.service-type-messaging { background: #4CAF50; }
+	.service-type-email { background: #2196F3; }
+	.service-type-social { background: #E91E63; }
+	.service-type-ai { background: #FF9800; }
+	.service-type-productivity { background: #9C27B0; }
+	.service-type-custom { display: none; }
 	&:hover {
 		background-color: lighten($base-color, 55%);
 	}

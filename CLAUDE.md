@@ -64,7 +64,7 @@ The original dev went inactive; this fork initially upgraded Electron/Chromium f
 Uses classic MVC/MVVM pattern:
 - `Application.js` — App entry, locale loading, update checker, zoom handler
 - `model/Service.js` — Service config (url, name, custom JS/CSS, unread counter JS, user agent, zoom)
-- `model/ServiceList.js` — Built-in service definitions (~95 services)
+- `model/ServiceList.js` — Built-in service definitions (~76 services)
 - `store/Services.js` — User's added services (LocalStorage-backed)
 - `store/ServicesList.js` — Built-in service catalog
 - `view/main/Main.js` — Main tab panel, bottom toolbar with "Follow us" social links
@@ -155,16 +155,20 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 - **User-agent spoofing:** `electron/main.js` strips Electron/Hamsket from the user agent to avoid service detection/blocking. Google accounts get a hardcoded Firefox UA via `session.webRequest.onBeforeSendHeaders`.
 - **Portable mode:** If a `data/` folder exists next to the app, userData/logs/cache redirect there.
 - **Locale system:** Language files in `resources/languages/`, loaded via `window.hamsket.config.getSync()` in `index.html`.
-- **Unread counters:** Each service has a `js_unread` field containing JavaScript that runs inside the webview to extract unread counts. Service-specific and fragile — breaks when services change their DOM.
+- **Unread counters:** Each service has a `js_unread` field containing JavaScript that runs inside the webview to extract unread counts. Service-specific and fragile — breaks when services change their DOM. WhatsApp now uses IndexedDB instead of DOM selectors. Gmail uses `document.title` regex as primary method. Discord uses `[class*="..."]` selectors with both underscore and dash suffixes for resilience. Telegram supports both Web K and Web A clients. Ferdium recipes repo (`github.com/ferdium/ferdium-recipes`) is the best reference for keeping selectors current.
 - **Dark mode:** Runtime CSS overlay (`resources/css/dark-mode.css`) toggled via `.hamsket-dark` body class. Injected dynamically by `MainController.setDarkClass()` to ensure it loads after ExtJS framework CSS. Config key: `dark_mode` (`'system'`/`'light'`/`'dark'`).
 - **ESM dependency:** `electron-context-menu` 4.x is pure ESM — loaded via `await import()` in the `app.on('ready')` handler, before any windows are created.
 
 ### ExtJS Framework Management
 - **Framework is gitignored.** Upgrade via: `sencha app upgrade --minimal -ext@X.Y.Z`
 - After upgrade: rename directory to match version, update `path` in `workspace.json`
-- **Trial watermark fix (required after each upgrade):**
+- **Shared SDK location:** A stable copy of the SDK lives at `C:\Users\Administrator\Code\hamsket-shared\ext-7.9.0`. Both the main repo and all worktrees create NTFS junctions to this shared copy. This protects the Sencha Cmd cache (`~\bin\Sencha\Cmd\repo\extract\ext\`) from accidental deletion when cleaning up worktrees.
+- **Worktree setup:** `cmd /c "mklink /J ext-7.9.0 C:\Users\Administrator\Code\hamsket-shared\ext-7.9.0"`
+- **DANGER:** Never use `rm -rf` or recursive delete on an `ext-7.9.0` junction — it will follow the junction and destroy the shared SDK. Use `rmdir ext-7.9.0` (Windows) or `cmd /c "rmdir ext-7.9.0"` (Git Bash) to safely remove only the junction.
+- **Trial watermark fix (required after each upgrade or SDK re-extract):**
   1. Set `$ext-trial: false` in `ext-X.Y.Z/classic/theme-base/sass/etc/all.scss` and `ext-X.Y.Z/modern/theme-base/sass/etc/all.scss`
   2. The `npm run patch-license` step (auto-runs during compile) patches the built `app.json`/`app.jsonp` to replace `"license":"trial"` with `"license":"commercial"` and removes watermark resources
+  3. **Check after worktree creation:** If ext-7.9.0 doesn't exist or is empty, re-create the junction and verify `$ext-trial: false` is set
 
 ## Completed Work
 
@@ -208,16 +212,19 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 - Dark theme covers: panels, windows, toolbars, tab bar, grids, forms, menus, buttons, tooltips, scrollbars, bottom bar
 - Key lesson: dark-mode.css must use `!important` on background/border overrides because the ExtJS microloader injects framework CSS dynamically, defeating cascade order
 
+### Phase 4: Service List & UX Modernization
+- **Service audit:** Removed 29 defunct services (HipChat, Hangouts, Stride, ICQ, TweetDeck, Freenode, etc.), updated URLs (Discord, Google Chat, RingCentral), re-categorized social/productivity services
+- **New services added (9):** Threads, Bluesky, ChatGPT, Claude, Gemini, Notion, Linear, Figma, Signal — with placeholder color-block icons in `resources/icons/`
+- **Service categories:** Added `social`, `ai`, `productivity` types alongside existing `messaging`/`email`/`custom`. Category filter checkboxes in the home tab service panel. Color-coded category badges on service tiles (`.service-type-badge` CSS).
+- **Icon fallback:** Added `onerror` handler on all `<img>` tags in service list templates — missing icons now show `resources/icons/custom.png` instead of broken image
+- **js_unread updates:** WhatsApp (IndexedDB approach, no longer DOM-based), Slack (descendant selector), Discord (underscore+dash fallback, title-based indirect), Gmail (title regex primary, `.aim` fallback), Telegram (Web K + Web A dual support), Microsoft Teams (added new `.fui-Badge` counter)
+- **Drag-and-drop polish:** CSS transitions, opacity, box-shadow on dragged tabs + dark mode variant
+- **WebContentsView migration: DEFERRED** — `<webview>` works in Electron 35, migration would be 40-60 hours with ExtJS layout incompatibility as main blocker. Revisit when Electron announces deprecation timeline.
+- Final service count: 76 (46 messaging, 18 email, 5 social, 3 AI, 3 productivity, 1 custom)
+
 ## Planned Work (Priority Order)
 
-### Phase 4: Service List & UX Modernization (next)
-- Audit built-in service list (~95 services) — many have changed URLs or no longer exist
-- Review and update `js_unread` counter snippets for active services
-- Replace deprecated `<webview>` tag with WebContentsView (Electron's modern replacement)
-- Add ability to reorder services via drag-and-drop
-- Consider adding service categories/folders
-
-### Phase 5: Fork Identity & Infrastructure
+### Phase 5: Fork Identity & Infrastructure (next)
 - Update `electron-builder.json` — change app ID from `com.thegoddessinari.hamsket` to own
 - Update `package.json` — author, repository URL, bugs URL, homepage to bitthief/hamsket
 - Update `app/Application.js` — change update check URL from TheGoddessInari's GitHub to this fork
@@ -229,7 +236,10 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 
 ### Known Issues (Low Priority)
 - SASS build shows ENOENT errors for theme images with `undefined` path segment (cosmetic, no impact)
-- `ext-7.9.0/` is gitignored — worktrees need an NTFS junction: `cmd /c "mklink /J ext-7.9.0 C:\Users\Administrator\Code\hamsket\ext-7.9.0"`
+- `ext-7.9.0/` is gitignored — worktrees need an NTFS junction (see ExtJS Framework Management above)
+- New service icons (Threads, Bluesky, ChatGPT, etc.) are solid-color placeholders — replace with proper branded icons
+- Test suite fails due to leftover `spectron` import in `test/helpers/HamsketTestHelper.js` (spectron was removed in Phase 1)
+- `js_unread` scripts should be manually verified against live services periodically — DOM selectors change without notice
 
 ## Code Style
 - No linter configured (no eslintrc). `.editorconfig` existed historically but was removed.
