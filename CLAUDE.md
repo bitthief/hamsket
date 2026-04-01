@@ -87,6 +87,7 @@ Uses classic MVC/MVVM pattern:
 ext-7.9.0/          # ExtJS 7.9.0 framework (active, gitignored)
 packages/local/      # Local Sencha packages (theme, calendar, pivot, etc.)
 resources/           # Icons, images, language files (30+ locales)
+resources/css/       # Runtime CSS overlays (dark-mode.css)
 sass/                # App-level SASS styles
 overrides/           # ExtJS framework overrides
 test/                # Mocha + Chai tests (minimal — one example spec)
@@ -155,6 +156,7 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 - **Portable mode:** If a `data/` folder exists next to the app, userData/logs/cache redirect there.
 - **Locale system:** Language files in `resources/languages/`, loaded via `window.hamsket.config.getSync()` in `index.html`.
 - **Unread counters:** Each service has a `js_unread` field containing JavaScript that runs inside the webview to extract unread counts. Service-specific and fragile — breaks when services change their DOM.
+- **Dark mode:** Runtime CSS overlay (`resources/css/dark-mode.css`) toggled via `.hamsket-dark` body class. Injected dynamically by `MainController.setDarkClass()` to ensure it loads after ExtJS framework CSS. Config key: `dark_mode` (`'system'`/`'light'`/`'dark'`).
 - **ESM dependency:** `electron-context-menu` 4.x is pure ESM — loaded via `await import()` in the `app.on('ready')` handler, before any windows are created.
 
 ### ExtJS Framework Management
@@ -196,15 +198,19 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 - Fixed: About dialog height for long BuildVersion strings
 - Updated all 40+ locale files to use `window.hamsket.config.getSync()` instead of `ipcRenderer.sendSync`
 
+### Phase 3: Dark Mode
+- Created `resources/css/dark-mode.css` — runtime CSS overlay scoped under `.hamsket-dark` body class
+- Added `dark_mode` config key (values: `'system'`, `'light'`, `'dark'`, default: `'system'`)
+- Added `nativeTheme:shouldUseDarkColors` IPC handler and `nativeTheme:updated` broadcast
+- Exposed `window.hamsket.theme.shouldUseDarkColors()` and `window.hamsket.theme.onUpdated()` in preload
+- `MainController.applyDarkMode()` toggles body class, dynamically injects CSS after ExtJS framework CSS
+- Added Dark Mode dropdown (Auto/Light/Dark) in Preferences with live preview on change
+- Dark theme covers: panels, windows, toolbars, tab bar, grids, forms, menus, buttons, tooltips, scrollbars, bottom bar
+- Key lesson: dark-mode.css must use `!important` on background/border overrides because the ExtJS microloader injects framework CSS dynamically, defeating cascade order
+
 ## Planned Work (Priority Order)
 
-### Phase 3: Dark Mode
-- ExtJS panels/toolbars don't follow system dark mode (the service list panel has white background)
-- DarkReader was previously used but has been removed — need a new approach
-- May need theme-level SCSS changes for `$dark-mode` variable (already defined in theme vars)
-- Electron 35 has good `nativeTheme` API — wire it to ExtJS theme switching
-
-### Phase 4: Service List & UX Modernization
+### Phase 4: Service List & UX Modernization (next)
 - Audit built-in service list (~95 services) — many have changed URLs or no longer exist
 - Review and update `js_unread` counter snippets for active services
 - Replace deprecated `<webview>` tag with WebContentsView (Electron's modern replacement)
