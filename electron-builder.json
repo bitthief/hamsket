@@ -30,9 +30,11 @@
 	"linux": {
 		"category": "Network",
 		"desktop": {
-			"Terminal": "false",
-			"Type": "Application",
-			"Categories": "Network;Email;Chat;InstantMessaging;"
+			"entry": {
+				"Terminal": "false",
+				"Type": "Application",
+				"Categories": "Network;Email;Chat;InstantMessaging;"
+			}
 		},
 		"target": ["deb"]
 	},
