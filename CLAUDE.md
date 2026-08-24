@@ -24,31 +24,34 @@ The original dev went inactive; this fork initially upgraded Electron/Chromium f
 ### Runtime Dependencies
 | Package | Version | Notes |
 |---------|---------|-------|
-| `auto-launch` | 5.0.6 | Auto-start on system boot |
+| `auto-launch` | 5.0.6 | Auto-start on system boot (latest) |
 | `electron-context-menu` | 4.1.2 | Right-click context menus (ESM, loaded via dynamic import in ready handler) |
-| `electron-store` | 8.1.0 | Persistent config storage |
-| `mime` | 3.0.0 | MIME type detection |
-| `tmp` | 0.2.1 | Temporary file handling |
+| `electron-store` | 8.1.0 | Persistent config storage. **Held** — v10+ is pure ESM, see ESM Blockers below |
+| `mime` | 3.0.0 | MIME type detection. **Held** — v4 is pure ESM, see ESM Blockers below |
+| `tmp` | 0.2.7 | Temporary file handling |
 
 ### Dev Dependencies
 | Package | Version | Notes |
 |---------|---------|-------|
-| `electron` | 35.7.5 | Chromium 134 |
-| `electron-builder` | 26.8.1 | Packaging tool |
-| `@electron/asar` | 3.2.7 | ASAR archive support |
-| `mocha` | 10.2.0 | Test runner |
-| `chai` | 5.0.0-alpha.0 | Assertion library |
-| `prettier` | 3.0.3 | Code formatter (no config file) |
-| `shx` | 0.3.4 | Cross-platform shell commands |
-| `crowdin` | 3.5.0 | Translation management |
-| `csvjson` | 5.1.0 | CSV/JSON conversion |
+| `electron` | 43.4.1 | Chromium 150, Node 24.17 |
+| `electron-builder` | 26.15.3 | Packaging tool |
+| `@electron/asar` | 4.3.0 | ASAR archive support — **appears unused**, nothing imports it (electron-builder bundles its own); candidate for removal |
+| `mocha` | 11.8.0 | Test runner |
+| `chai` | 6.2.2 | Assertion library (was on a `5.0.0-alpha.0` prerelease) |
+| `prettier` | 3.9.6 | Code formatter (no config file) |
+| `shx` | 0.4.0 | Cross-platform shell commands |
+| `crowdin` | 3.5.0 | Translation management — **abandoned upstream**, dev-only, used only by `languages.js` |
+| `csvjson` | 5.1.0 | CSV/JSON conversion — **abandoned upstream**, dev-only, used only by `languages.js` |
+
+### ESM Blockers (why `electron-store` and `mime` are pinned)
+`electron/main.js` is CommonJS and reads config **synchronously** — e.g. `ipcMain.on('getConfig')` replies via `event.returnValue`, which cannot await. `electron-store` v10+ and `mime` v4 are pure ESM (no CJS export), so upgrading either requires migrating `main.js` to ESM and reworking the synchronous config path. Neither package has a known vulnerability, so there is no security pressure to do this. Revisit as its own task, not as part of a routine dependency bump.
 
 ### Framework & Build Tools
 | Component | Version | Notes |
 |-----------|---------|-------|
 | **ExtJS** | 7.9.0.20 | Classic toolkit. Framework in `ext-7.9.0/` (gitignored) |
 | **Sencha Cmd** | 7.9.0.35 | Build tool. Ensure this version is first in PATH |
-| **Node.js** | >=18.0.0 (package.json engine), v25.8.2 installed locally | |
+| **Node.js** | >=18.0.0 (package.json engine), v26.7.0 installed locally | |
 | **App version** | 0.6.5 | |
 
 ## Architecture
@@ -222,6 +225,19 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 - **WebContentsView migration: DEFERRED** — `<webview>` works in Electron 35, migration would be 40-60 hours with ExtJS layout incompatibility as main blocker. Revisit when Electron announces deprecation timeline.
 - Final service count: 76 (46 messaging, 18 email, 5 social, 3 AI, 3 productivity, 1 custom)
 
+### Dependency Refresh (Aug 2026, post-Phase-4)
+Routine currency pass after a ~5-month gap. No feature work.
+- **Electron 35.7.5 → 43.4.1** — 35 was **EOL** (Electron supports only the latest 3 majors). Chromium 134 → 150, Node 22 → 24.17. Audited all breaking changes across 36–43: the codebase used **none** of the removed/deprecated APIs (no renderer `clipboard`, no `session.loadExtension`, no `plugin-crashed`, no `ProtocolResponse.session = null`, no `webFrame.routingId`, no `systemPreferences.isAeroGlassEnabled`, no `nativeImage.getBitmap`). `clearStorageData` already used `storages:` not the removed `quotas:`. Verified `<webview>`/`webviewTag`, `contextIsolation`, `setPermissionRequestHandler`, `webRequest.onBeforeSendHeaders`, `will-download`, and the contextBridge preload all still valid.
+- `tmp` 0.2.1 → 0.2.7 (2 HIGH CVEs; only *shipped* dep with an advisory. `tmpNameSync()` API unchanged)
+- `electron-builder` 26.8.1 → 26.15.3, `prettier` 3.0.3 → 3.9.6, `mocha` 10.2.0 → 11.8.0, `chai` 5.0.0-alpha.0 → 6.2.2, `shx` 0.3.4 → 0.4.0, `@electron/asar` 3.2.7 → 4.3.0
+- **Vulnerabilities 30 → 6** (critical 2 → 0, high 24 → 2). **All 6 remaining are dev-only and never shipped** — they trace to `csvjson`/`crowdin` (both abandoned upstream, already at latest, used only by `languages.js`) and mocha's tree.
+- **Held:** `electron-store` (v10+) and `mime` (v4) — pure ESM, see ESM Blockers above.
+- `<webview>` still not deprecated and has no announced removal date, so the Phase 4 decision to defer the WebContentsView migration still stands.
+
+### Toolchain Gotchas (new since Phase 4)
+- **npm 11 blocks install scripts by default** (`allow-scripts` policy). Harmless here: Electron 42+ no longer uses a `postinstall` to fetch its binary — it downloads **on demand** at first run, so the first `electron` invocation is slow and prints `Downloading Electron binary...`. Two concurrent first-runs can race and one will report `TypeError: fetch failed`; just re-run.
+- `electron-winstaller`'s install script stays blocked. That only affects **squirrel/NSIS installer** targets, not `pack:win64` (`--dir`, unpacked), which is what the Sandbox test build uses. If a full `build:win64` installer is ever needed, approve that script first.
+
 ## Planned Work (Priority Order)
 
 ### Phase 5: Fork Identity & Infrastructure (next)
@@ -238,8 +254,9 @@ User preferences persisted at runtime: window behavior, proxy, locale, master pa
 - SASS build shows ENOENT errors for theme images with `undefined` path segment (cosmetic, no impact)
 - `ext-7.9.0/` is gitignored — worktrees need an NTFS junction (see ExtJS Framework Management above)
 - New service icons (Threads, Bluesky, ChatGPT, etc.) are solid-color placeholders — replace with proper branded icons
-- Test suite fails due to leftover `spectron` import in `test/helpers/HamsketTestHelper.js` (spectron was removed in Phase 1)
-- `js_unread` scripts should be manually verified against live services periodically — DOM selectors change without notice
+- Test suite is dead: `test/helpers/HamsketTestHelper.js` still imports `spectron` (removed in Phase 1). Reviving it needs both a spectron replacement (e.g. `@wdio/electron-service` or Playwright) **and** converting `test/tests/app/example.spec.js` off `require('chai')` — chai 5+ is ESM-only.
+- `csvjson` and `crowdin` are abandoned upstream (already at their latest published versions) and carry unfixable advisories. Dev-only, never shipped — they back `languages.js` only. `languages.js` is likely already broken anyway: it points at the dead Crowdin API v1 endpoint `api.crowdin.net/api/project/rambox`. Worth resolving during Phase 5 fork-identity work.
+- `js_unread` scripts should be manually verified against live services periodically — DOM selectors change without notice. Last verified April 2026; **due for a re-check.**
 
 ## Code Style
 - No linter configured (no eslintrc). `.editorconfig` existed historically but was removed.
