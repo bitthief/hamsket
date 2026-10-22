@@ -86,16 +86,16 @@
 		"electron-context-menu": "4.1.2",
 		"electron-store": "8.1.0",
 		"mime": "3.0.0",
-		"tmp": "0.2.1"
+		"tmp": "0.2.7"
 	},
 	"devDependencies": {
 		"@electron/asar": "3.2.7",
 		"chai": "5.0.0-alpha.0",
 		"crowdin": "3.5.0",
 		"csvjson": "5.1.0",
-		"electron": "35.7.5",
-		"electron-builder": "26.8.1",
-		"mocha": "10.2.0",
+		"electron": "42.11.3",
+		"electron-builder": "26.15.3",
+		"mocha": "10.8.2",
 		"prettier": "3.0.3",
 		"shx": "0.3.4"
 	}
